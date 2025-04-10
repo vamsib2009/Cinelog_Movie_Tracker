@@ -134,6 +134,21 @@ def display_movie_cards(movies, title="🎬 Movies List"):
 
 
 
+import streamlit as st
+import time
+from streamlit_option_menu import option_menu
+
+def get_watched_count_for_user(user_id):
+    """Send a request to fetch whether the movie is watched or not"""
+    
+    response = requests.get("http://localhost:8080/watched/countuser", params={"userId": user_id})
+    
+    if response.status_code == 200:
+        return response.json()
+    else:
+        st.error("Failed to update status!")
+
+
 def main():
     # If a movie is selected, show its details
     if "selected_movie" in st.session_state and st.session_state["selected_movie"]:
@@ -142,6 +157,40 @@ def main():
 
     # Sidebar Navbar
     with st.sidebar:
+        # Custom CSS to push watched count to bottom
+        st.markdown(
+            """
+            <style>
+                .sidebar-container {
+                    display: flex;
+                    flex-direction: column;
+                    height: 100%;
+                }
+                .sidebar-top {
+                    flex-grow: 1;
+                }
+                .sidebar-bottom {
+                    margin-top: auto;
+                    padding-top: 1rem;
+                }
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+
+        # Begin structured sidebar layout
+        st.markdown('<div class="sidebar-container">', unsafe_allow_html=True)
+
+        # Top section: welcome message and menu
+        st.markdown('<div class="sidebar-top">', unsafe_allow_html=True)
+
+        # 👋 Welcome message
+        username = st.session_state.get("username", "Guest")
+        st.markdown(f"### 👋 Welcome, {username}!")
+
+        st.markdown("---")  # Divider
+
+        # 📂 Navigation menu
         menu_options = ["Home", "Trending", "Watchlist", "Favorites"]
         menu_icons = ["house", "fire", "list-task", "heart"]
 
@@ -150,18 +199,28 @@ def main():
             menu_icons.append("shield-lock")
 
         selected = option_menu(
-            menu_title="Movie Tracker",
+            menu_title=None,
             options=menu_options,
             icons=menu_icons,
-            menu_icon="film",
             default_index=0
         )
+
+        st.markdown('</div>', unsafe_allow_html=True)  # End sidebar-top
+
+        # Bottom section: watched movie count
+        st.markdown('<div class="sidebar-bottom">', unsafe_allow_html=True)
+
+        user_id = st.session_state.get("user_id")
+        if user_id:
+            watched_count = get_watched_count_for_user(user_id)
+            st.info(f"🎯 Watched Movies: **{watched_count}**")
+
+        st.markdown('</div></div>', unsafe_allow_html=True)  # Close both divs
 
     # ✅ Home Page (Includes Search Bar)
     if selected == "Home":
         st.title("🎥 Welcome to Movie Tracker")
         
-        # ✅ Integrated Search Bar
         search_query = st.text_input("🔍 Search for a movie based on name, description and genre:", value="", max_chars=50)
 
         if search_query and len(search_query) >= 2:
@@ -189,4 +248,5 @@ def main():
     elif selected == "Admin Panel":
         import admin_main
         admin_main.show_admin_dashboard()
+
 

@@ -16,6 +16,7 @@ def login_page():
     st.title("🎬 Movie Tracker - Login")
 
     username = st.text_input("Username")
+    st.session_state["username"] = username
     password = st.text_input("Password", type="password")
 
     if st.button("Login"):
