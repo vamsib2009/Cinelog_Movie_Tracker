@@ -1,0 +1,7 @@
+INSERT INTO movie (name, description, category, imdbrating, release_date, ott_available)
+VALUES
+('Inception', 'A mind-bending thriller about dreams within dreams.', 'ACTION', 8.8, '2010-07-16', true),
+('The Dark Knight', 'Batman faces the Joker in a fight for Gotham.', 'ACTION', 9.0, '2008-07-18', false),
+('Parasite', 'A poor family infiltrates a wealthy household.', 'DRAMA', 8.6, '2019-05-30', true),
+('Interstellar', 'A space exploration journey beyond our galaxy.', 'SCI_FI', 8.7, '2014-11-07', false),
+('The Godfather', 'The story of a powerful mafia family.', 'DRAMA', 9.2, '1972-03-24', false);
