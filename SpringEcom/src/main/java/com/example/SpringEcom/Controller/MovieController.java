@@ -49,8 +49,7 @@ public class MovieController {
     @GetMapping("/manualtesting")
     public String sendstr() { return "Testing 1 2 3...";}
 
-
-
+    
     //Endpoint to add movies from admin console
     @PostMapping("/addmovie")
     public ResponseEntity<String> addMoviesFromAdmin(@RequestBody Movie movie)
