@@ -1,97 +1,101 @@
 import 'package:flutter/material.dart';
-//import 'package:http/http.dart' as http;
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class MovieCard extends StatelessWidget {
+  final String movieTitle;
+  late String directorName;
 
-  MovieCard({super.key});
+  MovieCard({super.key, required this.movieTitle,});
 
+  Future<String> fetchPoster(String title) async {
+    const apiKey = '2774b611';
+    final url = 'http://www.omdbapi.com/?t=$title&apikey=$apiKey';
 
-  @override
-  Widget build(context)
-  {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Container(
-        height: 400,
-        width: 300,
-        decoration: BoxDecoration(
-          shape:BoxShape.rectangle,
-          color: Colors.white54,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 12,
-                  offset: Offset(0, 6),
-                ),
-              ],
-        ),
-        child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              buildProfile(),
-            ],
-          ),
-      ),
-    );
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      directorName = data['Director'];
+      return data['Poster'] ?? '';
+    } else {
+      throw Exception('Failed to load poster');
+    }
   }
 
-Widget buildProfile() {
-  //final urlProfile =
-  final backgroundProfile =
-      'https://images.pexels.com/photos/177598/pexels-photo-177598.jpeg?auto=compress&cs=tinysrgb&w=600';
-  final picProfile =
-      'https://images.pexels.com/photos/771742/pexels-photo-771742.jpeg?auto=compress&cs=tinysrgb&w=600';
+  @override
+  Widget build(BuildContext context) {
+    final picProfile =
+        'https://images.pexels.com/photos/771742/pexels-photo-771742.jpeg?auto=compress&cs=tinysrgb&w=600';
 
-  return Stack(
-    clipBehavior: Clip.none,
-    children: [
-      Container(
-        height: 120,
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            image: DecorationImage(
-              image: NetworkImage(
-                backgroundProfile,
-              ),
-              fit: BoxFit.cover,
-              opacity: 0.80,
-              alignment: Alignment.center,
-            ),
-            gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.deepPurple,
-                  Colors.orangeAccent,
-                ])),
-      ),
-      Positioned(
-        bottom: -25,
-        left: 20,
-        right: 20,
-        child: Center(
-          child: Container(
-            width: 100,
-            height: 100,
+    return FutureBuilder<String>(
+      future: fetchPoster(movieTitle),
+      builder: (context, snapshot) {
+        Widget background;
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          background = Container(
+            height: 120,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(60),
-              boxShadow: [
-                BoxShadow(color: Colors.white, spreadRadius: 4),
-              ],
-              image: DecorationImage(
-                image: NetworkImage(
-                  picProfile,
-                ),
-                fit: BoxFit.cover,
+              borderRadius: BorderRadius.circular(10),
+              color: Colors.grey[300],
+            ),
+            child: const Center(child: CircularProgressIndicator()),
+          );
+        } else if (snapshot.hasError || snapshot.data == null || snapshot.data == '') {
+          background = Container(
+            height: 120,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              gradient: const LinearGradient(
+                colors: [Colors.deepPurple, Colors.orangeAccent],
               ),
             ),
-          ),
-        ),
-      ),
-    ],
-  );
-}
+            child: const Center(child: Text("Failed to load image")),
+          );
+        } else {
+          background = Container(
+            height: 190,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              image: DecorationImage(
+                image: NetworkImage(snapshot.data!),
+                fit: BoxFit.fitWidth,
+                opacity: 0.8,
+                alignment: Alignment.center,
+              ),
+            ),
+          );
+        }
 
-
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            background,
+            Positioned(
+              top: 175,
+              left: 20,
+              right: 20,
+              child: Center(
+                child: Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(60),
+                    boxShadow: [
+                      const BoxShadow(color: Colors.white, spreadRadius: 4),
+                    ],
+                    image: DecorationImage(
+                      image: NetworkImage(picProfile),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }

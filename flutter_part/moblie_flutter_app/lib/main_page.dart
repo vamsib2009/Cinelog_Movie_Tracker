@@ -14,19 +14,21 @@ class MyHomePage extends StatelessWidget {
       ),
       backgroundColor: const Color.fromARGB(115, 158, 158, 158),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Welcome to the Movie App!',
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              MovieCard(),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Wrap(
+              //crossAxisAlignment: CrossAxisAlignment.start,
+              direction: Axis.vertical,
+              spacing: 20,
+              runSpacing: 20,
+              children: [
+                Container(height: 300, width: 200,child: MovieCard(movieTitle: 'Titanic'),),
+                Container(height: 300, width: 200,child: MovieCard(movieTitle: 'The Dark Knight'),),
+                Container(height: 300, width: 200,child: MovieCard(movieTitle: 'Bullet Train'),),
+                Container(height: 300, width: 200,child: MovieCard(movieTitle: 'Jersey'),),
+              ],
+            ),
           ),
-        ),
       ),
     );
   }
