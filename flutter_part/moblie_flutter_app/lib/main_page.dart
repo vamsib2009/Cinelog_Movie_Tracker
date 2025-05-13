@@ -22,7 +22,7 @@ class MyHomePage extends StatelessWidget {
               spacing: 20,
               runSpacing: 20,
               children: [
-                Container(height: 300, width: 200,child: MovieCard(movieTitle: 'Titanic'),),
+                Container(height: 300, width: 200, color: Colors.white, decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)), child: MovieCard(movieTitle: 'Titanic'),),
                 Container(height: 300, width: 200,child: MovieCard(movieTitle: 'The Dark Knight'),),
                 Container(height: 300, width: 200,child: MovieCard(movieTitle: 'Bullet Train'),),
                 Container(height: 300, width: 200,child: MovieCard(movieTitle: 'Jersey'),),

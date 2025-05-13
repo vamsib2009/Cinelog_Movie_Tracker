@@ -58,6 +58,9 @@ class MovieCard extends StatelessWidget {
             height: 190,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
+              gradient: const LinearGradient(
+                colors: [Colors.deepPurple, Colors.orangeAccent],
+              ),
               image: DecorationImage(
                 image: NetworkImage(snapshot.data!),
                 fit: BoxFit.fitWidth,
