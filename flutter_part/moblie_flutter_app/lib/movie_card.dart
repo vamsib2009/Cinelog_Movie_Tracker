@@ -38,7 +38,7 @@ class MovieCard extends StatelessWidget {
             height: 120,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
-              color: Colors.grey[300],
+              color: Colors.white,
             ),
             child: const Center(child: CircularProgressIndicator()),
           );
