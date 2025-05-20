@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
+@CrossOrigin(origins = "*")  // Allow from all origins (you can restrict it to "http://localhost:3000" if needed)
 @RestController
 @RequestMapping("/api")
 public class MovieController {
