@@ -3,10 +3,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class MovieCard extends StatelessWidget {
-  final String movieTitle;
-  late String directorName;
+  final Map<String, dynamic> remainingData;
 
-  MovieCard({super.key, required this.movieTitle,});
+  const MovieCard({super.key, required this.remainingData});
 
   Future<String> fetchPoster(String title) async {
     const apiKey = '2774b611';
@@ -16,7 +15,6 @@ class MovieCard extends StatelessWidget {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      directorName = data['Director'];
       return data['Poster'] ?? '';
     } else {
       throw Exception('Failed to load poster');
@@ -25,78 +23,97 @@ class MovieCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final picProfile =
-        'https://images.pexels.com/photos/771742/pexels-photo-771742.jpeg?auto=compress&cs=tinysrgb&w=600';
-
     return FutureBuilder<String>(
-      future: fetchPoster(movieTitle),
+      future: fetchPoster(remainingData['name']),
       builder: (context, snapshot) {
-        Widget background;
-
         if (snapshot.connectionState == ConnectionState.waiting) {
-          background = Container(
-            height: 120,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              color: Colors.white,
-            ),
-            child: const Center(child: CircularProgressIndicator()),
-          );
-        } else if (snapshot.hasError || snapshot.data == null || snapshot.data == '') {
-          background = Container(
-            height: 120,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              gradient: const LinearGradient(
-                colors: [Colors.deepPurple, Colors.orangeAccent],
-              ),
-            ),
-            child: const Center(child: Text("Failed to load image")),
-          );
-        } else {
-          background = Container(
-            height: 190,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              gradient: const LinearGradient(
-                colors: [Colors.deepPurple, Colors.orangeAccent],
-              ),
-              image: DecorationImage(
-                image: NetworkImage(snapshot.data!),
-                fit: BoxFit.fitWidth,
-                opacity: 0.8,
-                alignment: Alignment.center,
-              ),
-            ),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
-        return Stack(
-          clipBehavior: Clip.none,
-          children: [
-            background,
-            Positioned(
-              top: 175,
-              left: 20,
-              right: 20,
-              child: Center(
-                child: Container(
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(60),
-                    boxShadow: [
-                      const BoxShadow(color: Colors.white, spreadRadius: 4),
+        String posterUrl = snapshot.data ?? 'https://via.placeholder.com/150';
+
+        return Container(
+          height: 400,
+          width: 220,
+          //margin: const EdgeInsets.symmetric(vertical: 1),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(15),
+            color: Colors.white,
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 6,
+                offset: Offset(0, 3),
+              )
+            ],
+          ),
+          child: Column(
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                child: Image.network(
+                  posterUrl,
+                  height: 180,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        remainingData['name'],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        remainingData['description'],
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 12, color: Colors.black87),
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'IMDB: ${remainingData['imdbrating']}',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          Text(
+                            remainingData['category'],
+                            style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Watched: ${remainingData['watched'] ? 'Yes' : 'No'}',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          Text(
+                            'OTT: ${remainingData['ottAvailable'] ? 'Yes' : 'No'}',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
                     ],
-                    image: DecorationImage(
-                      image: NetworkImage(picProfile),
-                      fit: BoxFit.cover,
-                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );

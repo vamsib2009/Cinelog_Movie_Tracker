@@ -1,0 +1,20 @@
+{
+  "buildFiles": [
+    "C:\\Users\\vamsi\\Documents\\flutter\\packages\\flutter_tools\\gradle\\src\\main\\groovy\\CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "C:\\Users\\vamsi\\AppData\\Local\\Android\\sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+      "-C",
+      "C:\\Users\\vamsi\\Documents\\Cinelog_Movie_Tracker\\flutter_part\\moblie_flutter_app\\android\\app\\.cxx\\Debug\\5keu2c23\\armeabi-v7a",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "C:\\Users\\vamsi\\AppData\\Local\\Android\\sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+    "-C",
+    "C:\\Users\\vamsi\\Documents\\Cinelog_Movie_Tracker\\flutter_part\\moblie_flutter_app\\android\\app\\.cxx\\Debug\\5keu2c23\\armeabi-v7a",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {}
+}
