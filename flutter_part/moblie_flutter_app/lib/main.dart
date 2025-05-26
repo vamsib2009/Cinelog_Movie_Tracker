@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'main_page.dart'; // This is where MyHomePage is defined
+import 'login.dart'; //where we display the first login page
 
 void main() {
   runApp(const MyApp());
@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.grey,
       ),
       color: Colors.grey,
-      home: const MyHomePage(title: 'Movie Application Page'),
+      home: LoginPage(), //MyHomePage(title: 'Movie Application Page'),
     );
   }
 }
