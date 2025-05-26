@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:intl/intl.dart';
 
 class MovieCard extends StatelessWidget {
-  final Map<String, dynamic> remainingData;
+  final Map<String, dynamic> allMovieData;
 
-  const MovieCard({super.key, required this.remainingData});
+  const MovieCard({super.key, required this.allMovieData});
 
   Future<String> fetchPoster(String title) async {
     const apiKey = '2774b611';
@@ -21,10 +22,34 @@ class MovieCard extends StatelessWidget {
     }
   }
 
+  //Function to process the datetime from JSON to Flutter Display datetime
+  String formatCreatedTime(String createdTime) {
+    // print(createdTime);
+    try {
+      // Parse the created time string into a DateTime object
+      DateTime dateTime = DateTime.parse(createdTime);
+
+      // Convert the DateTime object to the local time
+      DateTime localDateTime = dateTime.toLocal();
+
+      // Define a formatter for date and time
+      DateFormat dateFormat = DateFormat.yMMMd(); //.add_jm(); Removed the part where we add the time
+
+      // Format the DateTime object into the desired format
+      String formattedDateTime = dateFormat.format(localDateTime);
+
+      return formattedDateTime;
+    } catch (e) {
+      // Handle error when parsing date
+      // print('Error parsing date: $e');
+      return 'Invalid Date';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<String>(
-      future: fetchPoster(remainingData['name']),
+      future: fetchPoster(allMovieData['name']),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -53,7 +78,7 @@ class MovieCard extends StatelessWidget {
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
                 child: Image.network(
                   posterUrl,
-                  height: 180,
+                  height: 240,
                   width: double.infinity,
                   fit: BoxFit.cover,
                 ),
@@ -65,8 +90,8 @@ class MovieCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        remainingData['name'],
-                        maxLines: 1,
+                        allMovieData['name'],
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
@@ -75,7 +100,7 @@ class MovieCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        remainingData['description'],
+                        allMovieData['description'],
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(fontSize: 12, color: Colors.black87),
@@ -85,11 +110,11 @@ class MovieCard extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'IMDB: ${remainingData['imdbrating']}',
+                            'IMDB: ${allMovieData['imdbrating']}',
                             style: const TextStyle(fontSize: 12),
                           ),
                           Text(
-                            remainingData['category'],
+                            allMovieData['category'],
                             style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
                           ),
                         ],
@@ -99,12 +124,27 @@ class MovieCard extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Watched: ${remainingData['watched'] ? 'Yes' : 'No'}',
+                            'Watched: ${allMovieData['watched'] ? 'Yes' : 'No'}',
                             style: const TextStyle(fontSize: 12),
                           ),
                           Text(
-                            'OTT: ${remainingData['ottAvailable'] ? 'Yes' : 'No'}',
+                            'OTT: ${allMovieData['ottAvailable'] ? 'Yes' : 'No'}',
                             style: const TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 6),
+                          Text(
+                            'Release Date: ${formatCreatedTime(allMovieData['releaseDate'] ?? 'N/A')}',
+                            style: TextStyle(
+                                fontSize: 12,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),

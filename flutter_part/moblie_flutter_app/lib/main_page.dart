@@ -12,7 +12,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<Map<String, dynamic>> remainingData = [];
+  List<Map<String, dynamic>> allMovieData = [];
 
   @override
   void initState() {
@@ -28,19 +28,19 @@ class _MyHomePageState extends State<MyHomePage> {
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);
         setState(() {
-          remainingData = data.map<Map<String, dynamic>>((json) {
+          allMovieData = data.map<Map<String, dynamic>>((json) {
             return {
               'id': json['id'],
-              'name':json['name']?.toString() ?? '',
+              'name': json['name']?.toString() ?? '',
               'description': json['description'],
               'category': json['category'],
               'imdbrating': json['imdbrating'],
-              'releaseDate': json['releaseDate'],
+              'releaseDate': json['releaseDate']?.toString() ?? '',
               'ottAvailable': json['ottAvailable'],
               'watched': json['watched'],
             };
           }).toList();
-          print(remainingData[1]['name']);
+          print(allMovieData[1]['name']);
         });
       } else {
         print('Failed to fetch movies. Status code: ${response.statusCode}');
@@ -58,26 +58,31 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       backgroundColor: const Color.fromARGB(115, 158, 158, 158),
       body: SafeArea(
+        child: Center(
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(12.0),
+            child: RefreshIndicator(
+              onRefresh: fetchMovies,
               child: SingleChildScrollView(
                 child: Wrap(
                   spacing: 20,
                   runSpacing: 20,
-                  children: remainingData.map((rd) {
+                  children: allMovieData.map((rd) {
                     return Container(
-                      height: 380,
-                      width: 170,
+                      height: 450,
+                      width: 175,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10),
                         color: Colors.white,
                       ),
-                      child: MovieCard(remainingData: rd),
+                      child: MovieCard(allMovieData: rd),
                     );
                   }).toList(),
-                            ),
+                ),
               ),
+            ),
           ),
+        ),
       ),
     );
   }

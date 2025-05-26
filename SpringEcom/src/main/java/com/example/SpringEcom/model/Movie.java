@@ -24,6 +24,7 @@ public class Movie {
 
     private String name;
     private String description;
+    private String directorName;
 
     @Enumerated(EnumType.STRING) //Store the category as a string instead of an Ordinal/Numerical for easier querying
     private Category category;
