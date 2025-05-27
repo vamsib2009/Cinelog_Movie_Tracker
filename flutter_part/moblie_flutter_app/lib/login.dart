@@ -70,6 +70,8 @@ class _LoginPageState extends State<LoginPage> {
                         onPressed: () {
                           if (_formKey.currentState!.validate()) {
                             handleLogin();
+                            _usernameController.clear();
+                            _passwordController.clear();
                             ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Signing in...')));
 
