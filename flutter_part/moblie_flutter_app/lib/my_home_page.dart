@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:moblie_flutter_app/movie_details.dart';
-import 'movie_card.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:moblie_flutter_app/movie_card.dart';
+import 'package:moblie_flutter_app/movie_details.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -15,7 +15,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   List<Map<String, dynamic>> allMovieData = [];
-  int _selectedIndex = 0; // Track the selected page index
+  final _searchController = TextEditingController();
 
   AppBar buildBeautifulAppBar(String title) {
     return AppBar(
@@ -110,12 +110,6 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  // Function to handle page changes
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -125,8 +119,7 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Stack(
         children: [
           // Main Body
-          SafeArea(
-            child: Center(
+          Center(
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: RefreshIndicator(
@@ -162,77 +155,14 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
               ),
-            ),
-          ),
-          
-          // Draggable Bottom Sheet
-          SafeArea(
-            child: DraggableScrollableSheet(
-              initialChildSize: 0.1, // Initial height (10% of the screen)
-              minChildSize: 0.1, // Minimum height (10% of the screen)
-              maxChildSize: 0.5, // Maximum height (50% of the screen)
-              builder: (context, scrollController) {
-                return Container(
-                  color: Colors.white,
-                  child: Column(
-                    children: [
-                      // 4 Icons for Navigation
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          IconButton(
-                            icon: Icon(Icons.home),
-                            onPressed: () {
-                              _onItemTapped(0); // Navigate to home
-                            },
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.auto_graph),
-                            onPressed: () {
-                              _onItemTapped(1); // Navigate to settings
-                            },
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.favorite),
-                            onPressed: () {
-                              _onItemTapped(2); // Navigate to profile
-                            },
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.list),
-                            onPressed: () {
-                              _onItemTapped(3); // Navigate to notifications
-                            },
-                          ),
-                        ],
-                      ),
-                      // ListView inside the bottom sheet
-                      Expanded(
-                        child: ListView.builder(
-                          controller: scrollController,
-                          itemCount: 3, // Change as per your content
-                          itemBuilder: (context, index) {
-                            return ListTile(
-                              title: Text('Item $index'),
-                              onTap: () {
-                                // Handle item tap if needed
-                                print('Item $index tapped');
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
+            ),          
         ],
       ),
     );
   }
 }
+
+
 
 Future<void> addlogfx(var movieId) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
