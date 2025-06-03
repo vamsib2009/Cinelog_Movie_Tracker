@@ -80,6 +80,20 @@ class _MyHomePageState extends State<MyHomePage> {
     fetchMovies();
   }
 
+
+  void _filterMovies(String query) {
+    setState(() {
+      allMovieData = allMovieData.where((movie) {
+        final movieName = movie['name']?.toLowerCase() ?? '';
+        final movieDescription = movie['description']?.toLowerCase() ?? '';
+        final movieCategory = movie['category']?.toLowerCase() ?? '';
+        return movieName.contains(query.toLowerCase()) ||
+            movieDescription.contains(query.toLowerCase()) ||
+            movieCategory.contains(query.toLowerCase());
+      }).toList();
+    });
+  }
+
   Future<void> fetchMovies() async {
     final fetchMovieUrl = Uri.parse('http://10.0.2.2:8080/api/movies');
     try {
