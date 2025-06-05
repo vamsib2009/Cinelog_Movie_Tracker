@@ -15,64 +15,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   List<Map<String, dynamic>> allMovieData = [];
-  final _searchController = TextEditingController();
 
-  AppBar buildBeautifulAppBar(String title) {
-    return AppBar(
-      elevation: 5,
-      toolbarHeight: 60,
-      centerTitle: true,
-      automaticallyImplyLeading: false,
-      leading: Padding(
-        padding: const EdgeInsets.only(left: 2),
-        child: IconButton(
-          icon: const Icon(Icons.logout, color: Colors.white),
-          iconSize: 40,
-          onPressed: () async {
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.clear(); // Optional: Clear user session
-            Navigator.pop(context);
-          },
-        ),
-      ),
-      backgroundColor: Colors.transparent,
-      flexibleSpace: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF4ECDC4), Color(0xFF556270)],
-            begin: Alignment.bottomCenter,
-            end: Alignment.topCenter,
-          ),
-          borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(30),
-          ),
-        ),
-      ),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          bottom: Radius.circular(30),
-        ),
-      ),
-      title: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-          letterSpacing: 1.2,
-        ),
-      ),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.search, color: Colors.white),
-          iconSize: 40,
-          onPressed: () {
-            // handle search or other action
-          },
-        ),
-      ],
-    );
-  }
 
   @override
   void initState() {
@@ -81,18 +24,18 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
 
-  void _filterMovies(String query) {
-    setState(() {
-      allMovieData = allMovieData.where((movie) {
-        final movieName = movie['name']?.toLowerCase() ?? '';
-        final movieDescription = movie['description']?.toLowerCase() ?? '';
-        final movieCategory = movie['category']?.toLowerCase() ?? '';
-        return movieName.contains(query.toLowerCase()) ||
-            movieDescription.contains(query.toLowerCase()) ||
-            movieCategory.contains(query.toLowerCase());
-      }).toList();
-    });
-  }
+  // void _filterMovies(String query) {
+  //   setState(() {
+  //     allMovieData = allMovieData.where((movie) {
+  //       final movieName = movie['name']?.toLowerCase() ?? '';
+  //       final movieDescription = movie['description']?.toLowerCase() ?? '';
+  //       final movieCategory = movie['category']?.toLowerCase() ?? '';
+  //       return movieName.contains(query.toLowerCase()) ||
+  //           movieDescription.contains(query.toLowerCase()) ||
+  //           movieCategory.contains(query.toLowerCase());
+  //     }).toList();
+  //   });
+  // }
 
   Future<void> fetchMovies() async {
     final fetchMovieUrl = Uri.parse('http://10.0.2.2:8080/api/movies');
@@ -127,10 +70,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: buildBeautifulAppBar("All Movies"),
-      backgroundColor: const Color.fromARGB(115, 158, 158, 158),
-      body: Stack(
+    return Stack(
         children: [
           // Main Body
           Center(
@@ -171,7 +111,6 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),          
         ],
-      ),
     );
   }
 }
