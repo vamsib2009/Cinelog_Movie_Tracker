@@ -228,7 +228,8 @@ class MovieDetails extends StatelessWidget {
                           ),
                         ),
                       ],
-                    )
+                    ),
+                    const SizedBox(height: 12),
                   ],
                 ),
               ),

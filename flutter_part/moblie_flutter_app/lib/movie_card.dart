@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class MovieCard extends StatelessWidget {
   final Map<String, dynamic> allMovieData;
@@ -33,7 +34,8 @@ class MovieCard extends StatelessWidget {
       DateTime localDateTime = dateTime.toLocal();
 
       // Define a formatter for date and time
-      DateFormat dateFormat = DateFormat.yMMMd(); //.add_jm(); Removed the part where we add the time
+      DateFormat dateFormat = DateFormat
+          .yMMMd(); //.add_jm(); Removed the part where we add the time
 
       // Format the DateTime object into the desired format
       String formattedDateTime = dateFormat.format(localDateTime);
@@ -58,8 +60,8 @@ class MovieCard extends StatelessWidget {
         String posterUrl = snapshot.data ?? 'https://via.placeholder.com/150';
 
         return Container(
-          height: 400,
-          width: 220,
+          height: 200,
+          width: 150,
           //margin: const EdgeInsets.symmetric(vertical: 1),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(15),
@@ -67,25 +69,27 @@ class MovieCard extends StatelessWidget {
             boxShadow: const [
               BoxShadow(
                 color: Colors.black26,
-                blurRadius: 6,
-                offset: Offset(0, 3),
+                blurRadius: 1,
+                offset: Offset(1, 1),
               )
             ],
           ),
           child: Column(
             children: [
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(10)),
                 child: Image.network(
                   posterUrl,
-                  height: 240,
+                  height: 270,
                   width: double.infinity,
                   fit: BoxFit.cover,
                 ),
               ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -93,9 +97,9 @@ class MovieCard extends StatelessWidget {
                         allMovieData['name'],
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: GoogleFonts.poppins(
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          fontSize: 15,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -103,7 +107,10 @@ class MovieCard extends StatelessWidget {
                         allMovieData['description'],
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 12, color: Colors.black87),
+                        style: GoogleFonts.montserrat(
+                          fontSize: 11,
+                          color: Colors.black87,
+                        ),
                       ),
                       const SizedBox(height: 6),
                       Row(
@@ -111,11 +118,14 @@ class MovieCard extends StatelessWidget {
                         children: [
                           Text(
                             'IMDB: ${allMovieData['imdbrating']}',
-                            style: const TextStyle(fontSize: 12),
+                            style: GoogleFonts.montserrat(fontSize: 10),
                           ),
                           Text(
                             allMovieData['category'],
-                            style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                            style: GoogleFonts.montserrat(
+                              fontSize: 10,
+                              fontStyle: FontStyle.italic,
+                            ),
                           ),
                         ],
                       ),
@@ -125,11 +135,11 @@ class MovieCard extends StatelessWidget {
                         children: [
                           Text(
                             'Watched: ${allMovieData['watched'] ? 'Yes' : 'No'}',
-                            style: const TextStyle(fontSize: 12),
+                            style: GoogleFonts.montserrat(fontSize: 10),
                           ),
                           Text(
                             'OTT: ${allMovieData['ottAvailable'] ? 'Yes' : 'No'}',
-                            style: const TextStyle(fontSize: 12),
+                            style: GoogleFonts.montserrat(fontSize: 10),
                           ),
                         ],
                       ),
@@ -140,11 +150,12 @@ class MovieCard extends StatelessWidget {
                           const SizedBox(height: 6),
                           Text(
                             'Release Date: ${formatCreatedTime(allMovieData['releaseDate'] ?? 'N/A')}',
-                            style: TextStyle(
-                                fontSize: 12,
-                                fontStyle: FontStyle.italic,
-                              ),
+                            style: GoogleFonts.montserrat(
+                              fontSize: 10,
+                              fontStyle: FontStyle.italic,
+                            ),
                             overflow: TextOverflow.ellipsis,
+                            maxLines: 2,
                           ),
                         ],
                       ),
