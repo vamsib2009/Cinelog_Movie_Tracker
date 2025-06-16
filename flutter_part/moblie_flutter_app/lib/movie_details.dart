@@ -230,6 +230,29 @@ class MovieDetails extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        TextButton.icon(
+                          onPressed: () => addToFavorites(context),
+                          icon: Icon(Icons.favorite_sharp, color: Colors.red[600]),
+                          label: Text(
+                            'Add to Favorites',
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.white.withValues(alpha: 0.7),
+                            padding:
+                                EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -238,5 +261,27 @@ class MovieDetails extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<void> addToFavorites(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int? userId = prefs.getInt('userId');
+
+    int movieId = int.tryParse(allMovieData['id'].toString()) ?? 0;
+
+    final addfavendpoint = Uri.http('10.0.2.2:8080', 'favorites/add', {
+      'userId': userId.toString(),
+      'movieId': movieId.toString(),
+    });
+
+    try {
+      final response = await http.post(addfavendpoint);
+      print(response.statusCode);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(response.body)),
+      );
+    } catch (e) {
+      print('Error login: $e');
+    }
   }
 }

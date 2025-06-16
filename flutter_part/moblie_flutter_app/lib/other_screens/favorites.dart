@@ -31,7 +31,7 @@ class _FavoritePageState extends State<Favorite> {
       'userId': userId.toString(),
     });
     try {
-      final response = await http.get(fetchMovieUrl);
+      final response = await http.post(fetchMovieUrl);
 
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);
@@ -48,13 +48,37 @@ class _FavoritePageState extends State<Favorite> {
               'watched': json['watched'],
             };
           }).toList();
-          print(allMovieData[1]['name']);
         });
       } else {
         print('Failed to fetch movies. Status code: ${response.statusCode}');
       }
     } catch (e) {
       print('Error fetching movies: $e');
+    }
+  }
+
+  Future<void> removeFavoriteMovie(String movieId, BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int? userId = prefs.getInt('userId');
+
+    final fetchMovieUrl = Uri.http('10.0.2.2:8080', 'favorites/delete',
+        {'userId': userId.toString(), 'movieId': movieId.toString()});
+    try {
+      final response = await http.post(fetchMovieUrl);
+
+      if (response.statusCode == 200) {
+        //List<dynamic> data = json.decode(response.body);
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Removed from favorites')));
+        setState(() {
+          fetchFavoriteMovies();
+        });
+      } else {
+        print(
+            'Failed to remove movie from favorites. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error removing movies: $e');
     }
   }
 
@@ -69,38 +93,72 @@ class _FavoritePageState extends State<Favorite> {
           child: RefreshIndicator(
             onRefresh: fetchFavoriteMovies,
             child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  SizedBox(height: 10),
-                  Wrap(
-                    spacing: 20,
-                    runSpacing: 20,
-                    children: allMovieData.map((rd) {
-                      return Container(
-                        height: 450,
-                        width: 175,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: Colors.white,
-                        ),
-                        child: InkWell(
-                          onTap: () {
-                            // Function to log the click
-                            addlogfx(rd['id']);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      MovieDetails(allMovieData: rd)),
-                            );
-                          },
-                          child: MovieCard(allMovieData: rd),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Container(
+                constraints: BoxConstraints(minHeight: 400),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 10),
+                    Container(
+                      width: double.infinity,
+                      child: Wrap(
+                        spacing: 20,
+                        runSpacing: 20,
+                        children: allMovieData.map((rd) {
+                          return Container(
+                            height: 450,
+                            width: 175,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              color: Colors.white,
+                            ),
+                            child: InkWell(
+                              onTap: () {
+                                // Function to log the click
+                                addlogfx(rd['id']);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          MovieDetails(allMovieData: rd)),
+                                );
+                              },
+                              child: SizedBox(
+                                width:150,
+                                height:300,
+                                child: Stack(children: [
+                                  Positioned.fill(child: MovieCard(allMovieData: rd)),
+                                  Positioned(
+                                    top:4,
+                                    right: 4,
+                                    child: Container(
+                                      width: 50,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.5), shape: BoxShape.circle),
+                                      child: IconButton(
+                                        splashColor: Colors.transparent,
+                                        highlightColor: Colors.transparent,
+                                        tooltip: 'Remove from favorites',
+                                        icon: Icon(
+                                          Icons.close,
+                                          color: Colors.blueGrey,
+                                        ),
+                                        iconSize: 27,
+                                        onPressed: () =>
+                                            {removeFavoriteMovie(rd['id'], context)},
+                                      ),
+                                    ),
+                                  ),
+                                ]),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

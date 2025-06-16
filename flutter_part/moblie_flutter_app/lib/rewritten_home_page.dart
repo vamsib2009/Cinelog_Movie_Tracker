@@ -111,7 +111,7 @@ class _RewrittenHomePageState extends State<RewrittenHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFECEFF1) // Blue grey 50
+      backgroundColor: Colors.white.withValues(alpha:1.0) // Blue grey 50
       , // Light grey
       appBar: buildBeautifulAppBar(_titles[_selectedPage], context),
       body: Stack(
