@@ -86,7 +86,6 @@ class _MyHomePageState extends State<MyHomePage> {
               'watched': json['watched'],
             };
           }).toList();
-          print(allMovieData[1]['name']);
         });
       } else {
         print('Failed to fetch movies. Status code: ${response.statusCode}');
@@ -109,39 +108,46 @@ class _MyHomePageState extends State<MyHomePage> {
           child: RefreshIndicator(
             onRefresh: fetchMovies,
             child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  searchField(),
-                  SizedBox(height: 10),
-                  Wrap(
-                    spacing: 15,
-                    runSpacing: 15,
-                    children: allMovieData.map((rd) {
-                      return Container(
-                        height: 440,
-                        width: 175,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: Colors.white,
-                        ),
-                        child: InkWell(
-                          onTap: () {
-                            // Function to log the click
-                            addlogfx(rd['id']);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      MovieDetails(allMovieData: rd)),
-                            );
-                          },
-                          child: MovieCard(allMovieData: rd),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Container(
+                constraints: BoxConstraints(minHeight: 400),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    searchField(),
+                    SizedBox(height: 10),
+                    Container(
+                      width: double.infinity,
+                      child: Wrap(
+                        spacing: 15,
+                        runSpacing: 15,
+                        children: allMovieData.map((rd) {
+                          return Container(
+                            height: 440,
+                            width: 175,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              color: Colors.white,
+                            ),
+                            child: InkWell(
+                              onTap: () {
+                                // Function to log the click
+                                addlogfx(rd['id']);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          MovieDetails(allMovieData: rd)),
+                                );
+                              },
+                              child: MovieCard(allMovieData: rd),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
