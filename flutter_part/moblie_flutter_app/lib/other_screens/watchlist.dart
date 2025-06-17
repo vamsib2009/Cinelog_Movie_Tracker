@@ -1,13 +1,186 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:moblie_flutter_app/movie_card.dart';
+import 'package:moblie_flutter_app/movie_details.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class Watchlist extends StatelessWidget { 
+class Watchlist extends StatefulWidget {
+  const Watchlist({
+    super.key,
+  });
+
+  @override
+  _WatchlistPageState createState() => _WatchlistPageState();
+}
+
+class _WatchlistPageState extends State<Watchlist> {
+  List<Map<String, dynamic>> allMovieData = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchWatchlistMovies();
+  }
+
+  Future<void> fetchWatchlistMovies() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int? userId = prefs.getInt('userId');
+
+    final fetchMovieUrl = Uri.http('10.0.2.2:8080', 'watchlist/get', {
+      'userId': userId.toString(),
+    });
+    try {
+      final response = await http.post(fetchMovieUrl);
+
+      if (response.statusCode == 200) {
+        List<dynamic> data = json.decode(response.body);
+        setState(() {
+          allMovieData = data.map<Map<String, dynamic>>((json) {
+            return {
+              'id': json['id']?.toString() ?? '',
+              'name': json['name']?.toString() ?? '',
+              'description': json['description'],
+              'category': json['category'],
+              'imdbrating': json['imdbrating'],
+              'releaseDate': json['releaseDate']?.toString() ?? '',
+              'ottAvailable': json['ottAvailable'],
+              'watched': json['watched'],
+            };
+          }).toList();
+        });
+      } else {
+        print('Failed to fetch movies. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching movies: $e');
+    }
+  }
+
+  Future<void> removeWatchlistMovie(String movieId, BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int? userId = prefs.getInt('userId');
+
+    final fetchMovieUrl = Uri.http('10.0.2.2:8080', 'watchlist/delete',
+        {'userId': userId.toString(), 'movieId': movieId.toString()});
+    try {
+      final response = await http.post(fetchMovieUrl);
+
+      if (response.statusCode == 200) {
+        //List<dynamic> data = json.decode(response.body);
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Removed from Watchlist')));
+        setState(() {
+          fetchWatchlistMovies();
+        });
+      } else {
+        print(
+            'Failed to remove movie from Watchlist. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error removing movies: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Center(
-        child: Text('TBC'),
-      ),
+    return Stack(
+      children: [
+        // Main Body
+        Padding(
+          padding: const EdgeInsets.only(
+              left: 12.0, right: 12.0, top: 12.0, bottom: 85),
+          child: RefreshIndicator(
+            onRefresh: fetchWatchlistMovies,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Container(
+                constraints: BoxConstraints(minHeight: 400),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    SizedBox(height: 10),
+                    Container(
+                      width: double.infinity,
+                      child: Wrap(
+                        spacing: 20,
+                        runSpacing: 20,
+                        children: allMovieData.map((rd) {
+                          return Container(
+                            height: 450,
+                            width: 175,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              color: Colors.white,
+                            ),
+                            child: InkWell(
+                              onTap: () {
+                                // Function to log the click
+                                addlogfx(rd['id']);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          MovieDetails(allMovieData: rd)),
+                                );
+                              },
+                              child: SizedBox(
+                                width:150,
+                                height:300,
+                                child: Stack(children: [
+                                  Positioned.fill(child: MovieCard(allMovieData: rd)),
+                                  Positioned(
+                                    top:4,
+                                    right: 4,
+                                    child: Container(
+                                      width: 50,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.5), shape: BoxShape.circle),
+                                      child: IconButton(
+                                        splashColor: Colors.transparent,
+                                        highlightColor: Colors.transparent,
+                                        tooltip: 'Remove from Watchlist',
+                                        icon: Icon(
+                                          Icons.close,
+                                          color: Colors.blueGrey,
+                                        ),
+                                        iconSize: 27,
+                                        onPressed: () =>
+                                            {removeWatchlistMovie(rd['id'], context)},
+                                      ),
+                                    ),
+                                  ),
+                                ]),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
+  }
+}
+
+Future<void> addlogfx(var movieId) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  int? userId = prefs.getInt('userId');
+
+  final loggingendpoint = Uri.http('10.0.2.2:8080', 'logging/add', {
+    'userId': userId.toString(),
+    'movieId': movieId.toString(),
+  });
+
+  try {
+    final response = await http.post(loggingendpoint);
+    print(response.statusCode);
+  } catch (e) {
+    print('Error login: $e');
   }
 }

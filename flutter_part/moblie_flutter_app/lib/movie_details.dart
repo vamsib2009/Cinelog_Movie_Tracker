@@ -231,6 +231,7 @@ class MovieDetails extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         TextButton.icon(
                           onPressed: () => addToFavorites(context),
@@ -239,6 +240,25 @@ class MovieDetails extends StatelessWidget {
                             'Add to Favorites',
                             style: TextStyle(
                               color: Colors.red,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.white.withValues(alpha: 0.7),
+                            padding:
+                                EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                        TextButton.icon(
+                          onPressed: () => addToWatchlist(context),
+                          icon: Icon(Icons.list_rounded, color: Colors.black),
+                          label: Text(
+                            'Add to Watchlist',
+                            style: TextStyle(
+                              color: Colors.black,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -284,4 +304,27 @@ class MovieDetails extends StatelessWidget {
       print('Error login: $e');
     }
   }
+
+    Future<void> addToWatchlist(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int? userId = prefs.getInt('userId');
+
+    int movieId = int.tryParse(allMovieData['id'].toString()) ?? 0;
+
+    final addfavendpoint = Uri.http('10.0.2.2:8080', 'watchlist/add', {
+      'userId': userId.toString(),
+      'movieId': movieId.toString(),
+    });
+
+    try {
+      final response = await http.post(addfavendpoint);
+      print(response.statusCode);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(response.body)),
+      );
+    } catch (e) {
+      print('Error login: $e');
+    }
+  }
+
 }
