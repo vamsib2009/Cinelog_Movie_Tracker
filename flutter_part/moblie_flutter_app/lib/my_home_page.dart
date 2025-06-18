@@ -47,15 +47,17 @@ class _MyHomePageState extends State<MyHomePage> {
             return {
               'id': json['id']?.toString() ?? '',
               'name': json['name']?.toString() ?? '',
-              'description': json['description'],
-              'category': json['category'],
-              'imdbrating': json['imdbrating'],
+              'description': json['description'] ?? '',
+              'directorName': json['directorName']?.toString() ?? '',
+              'category': json['category'] ?? '',
+              'imdbrating': json['imdbrating'] ?? 0.0,
               'releaseDate': json['releaseDate']?.toString() ?? '',
-              'ottAvailable': json['ottAvailable'],
-              'watched': json['watched'],
+              'language': json['language'] ?? '',
+              'country': json['country'] ?? '',
+              'actorNames': List<String>.from(json['actorNames'] ?? []),
+              'tags': List<String>.from(json['tags'] ?? []),
             };
           }).toList();
-          print(allMovieData[1]['name']);
         });
       } else {
         print('Failed to fetch movies. Status code: ${response.statusCode}');
@@ -78,12 +80,15 @@ class _MyHomePageState extends State<MyHomePage> {
             return {
               'id': json['id']?.toString() ?? '',
               'name': json['name']?.toString() ?? '',
-              'description': json['description'],
-              'category': json['category'],
-              'imdbrating': json['imdbrating'],
+              'description': json['description'] ?? '',
+              'directorName': json['directorName']?.toString() ?? '',
+              'category': json['category'] ?? '',
+              'imdbrating': json['imdbrating'] ?? 0.0,
               'releaseDate': json['releaseDate']?.toString() ?? '',
-              'ottAvailable': json['ottAvailable'],
-              'watched': json['watched'],
+              'language': json['language'] ?? '',
+              'country': json['country'] ?? '',
+              'actorNames': List<String>.from(json['actorNames'] ?? []),
+              'tags': List<String>.from(json['tags'] ?? []),
             };
           }).toList();
         });
@@ -104,7 +109,7 @@ class _MyHomePageState extends State<MyHomePage> {
         // Main Body
         Padding(
           padding: const EdgeInsets.only(
-              left: 12.0, right: 12.0, top: 12.0, bottom: 85),
+              left: 27.0, right: 12.0, top: 12.0, bottom: 85),
           child: RefreshIndicator(
             onRefresh: fetchMovies,
             child: SingleChildScrollView(

@@ -1,11 +1,24 @@
 package com.example.SpringEcom.model;
 
-enum Category {
+public enum Category {
     Action,
+    Adventure,
+    Animation,
+    Biography,
     Comedy,
-    Romance,
-    Horror,
+    Crime,
+    Documentary,
     Drama,
-    Science,
-    Thriller,Category
+    Family,
+    Fantasy,
+    History,
+    Horror,
+    Musical,
+    Mystery,
+    Romance,
+    SciFi,
+    Sport,
+    Thriller,
+    War,
+    Western
 }

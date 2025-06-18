@@ -13,37 +13,28 @@ class MovieCard extends StatelessWidget {
     const apiKey = '2774b611';
     final url = 'http://www.omdbapi.com/?t=$title&apikey=$apiKey';
 
-    final response = await http.get(Uri.parse(url));
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data['Poster'] ?? '';
-    } else {
-      throw Exception('Failed to load poster');
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final poster = data['Poster'];
+        if (poster != null && poster != 'N/A') {
+          return poster;
+        }
+      }
+    } catch (_) {
+      // Ignore and fall back to default
     }
+
+    return 'https://dummyimage.com/300x450/cccccc/ffffff&text=No+Poster';
   }
 
-  //Function to process the datetime from JSON to Flutter Display datetime
-  String formatCreatedTime(String createdTime) {
-    // print(createdTime);
+  String formatCreatedTime(String? createdTime) {
+    if (createdTime == null) return 'N/A';
     try {
-      // Parse the created time string into a DateTime object
-      DateTime dateTime = DateTime.parse(createdTime);
-
-      // Convert the DateTime object to the local time
-      DateTime localDateTime = dateTime.toLocal();
-
-      // Define a formatter for date and time
-      DateFormat dateFormat = DateFormat
-          .yMMMd(); //.add_jm(); Removed the part where we add the time
-
-      // Format the DateTime object into the desired format
-      String formattedDateTime = dateFormat.format(localDateTime);
-
-      return formattedDateTime;
-    } catch (e) {
-      // Handle error when parsing date
-      // print('Error parsing date: $e');
+      final dateTime = DateTime.parse(createdTime).toLocal();
+      return DateFormat.yMMMd().format(dateTime);
+    } catch (_) {
       return 'Invalid Date';
     }
   }
@@ -53,48 +44,49 @@ class MovieCard extends StatelessWidget {
     return FutureBuilder<String>(
       future: fetchPoster(allMovieData['name']),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        String posterUrl = snapshot.data ?? 'https://via.placeholder.com/150';
+        String posterUrl = snapshot.data ??
+            'https://dummyimage.com/300x450/cccccc/ffffff&text=No+Poster';
 
         return Container(
-          height: 200,
-          width: 150,
-          //margin: const EdgeInsets.symmetric(vertical: 1),
+          height: 400,
+          width: 160,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(15),
             color: Colors.white,
             boxShadow: const [
               BoxShadow(
                 color: Colors.black26,
-                blurRadius: 1,
-                offset: Offset(1, 1),
-              )
+                blurRadius: 3,
+                offset: Offset(2, 2),
+              ),
             ],
           ),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(10)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
                 child: Image.network(
                   posterUrl,
-                  height: 270,
+                  height: 240,
                   width: double.infinity,
                   fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Image.network(
+                    'https://dummyimage.com/300x450/cccccc/ffffff&text=No+Poster',
+                    height: 240,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
               Expanded(
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        allMovieData['name'],
+                        allMovieData['name'] ?? 'Unknown',
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.poppins(
@@ -104,7 +96,7 @@ class MovieCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        allMovieData['description'],
+                        allMovieData['description'] ?? 'No description available',
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.montserrat(
@@ -117,11 +109,11 @@ class MovieCard extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'IMDB: ${allMovieData['imdbrating']}',
+                            'IMDB: ${allMovieData['imdbrating'] ?? 'N/A'}',
                             style: GoogleFonts.montserrat(fontSize: 10),
                           ),
                           Text(
-                            allMovieData['category'],
+                            allMovieData['category'] ?? '',
                             style: GoogleFonts.montserrat(
                               fontSize: 10,
                               fontStyle: FontStyle.italic,
@@ -129,35 +121,15 @@ class MovieCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Watched: ${allMovieData['watched'] ? 'Yes' : 'No'}',
-                            style: GoogleFonts.montserrat(fontSize: 10),
-                          ),
-                          Text(
-                            'OTT: ${allMovieData['ottAvailable'] ? 'Yes' : 'No'}',
-                            style: GoogleFonts.montserrat(fontSize: 10),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 6),
-                          Text(
-                            'Release Date: ${formatCreatedTime(allMovieData['releaseDate'] ?? 'N/A')}',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 10,
-                              fontStyle: FontStyle.italic,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 2,
-                          ),
-                        ],
+                      //const Spacer(),
+                      Text(
+                        'Release: ${formatCreatedTime(allMovieData['releaseDate'])}',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 10,
+                          fontStyle: FontStyle.italic,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                     ],
                   ),

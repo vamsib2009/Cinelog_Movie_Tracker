@@ -40,12 +40,15 @@ class _WatchlistPageState extends State<Watchlist> {
             return {
               'id': json['id']?.toString() ?? '',
               'name': json['name']?.toString() ?? '',
-              'description': json['description'],
-              'category': json['category'],
-              'imdbrating': json['imdbrating'],
+              'description': json['description'] ?? '',
+              'directorName': json['directorName']?.toString() ?? '',
+              'category': json['category'] ?? '',
+              'imdbrating': json['imdbrating'] ?? 0.0,
               'releaseDate': json['releaseDate']?.toString() ?? '',
-              'ottAvailable': json['ottAvailable'],
-              'watched': json['watched'],
+              'language': json['language'] ?? '',
+              'country': json['country'] ?? '',
+              'actorNames': List<String>.from(json['actorNames'] ?? []),
+              'tags': List<String>.from(json['tags'] ?? []),
             };
           }).toList();
         });

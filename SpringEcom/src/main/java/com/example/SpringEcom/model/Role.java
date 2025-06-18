@@ -1,6 +1,6 @@
 package com.example.SpringEcom.model;
 
-enum Role {
+public enum Role {
     USER,
     ADMIN
 }

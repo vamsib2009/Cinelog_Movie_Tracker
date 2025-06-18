@@ -159,6 +159,23 @@ class MovieDetails extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 12),
+                                        Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.person_4,
+                            size: 14, color: Colors.white),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Director Name: ${allMovieData['directorName'] ?? 'N/A'}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height:12),
                     Wrap(
                       spacing: 10,
                       children: [
@@ -192,26 +209,26 @@ class MovieDetails extends StatelessWidget {
                       },
                     ),
 
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.remove_red_eye, color: Colors.white),
-                        const SizedBox(width: 5),
-                        Text(
-                          'Watched: ${allMovieData['watched'] ? 'Yes' : 'No'}',
-                          style: const TextStyle(
-                              fontSize: 12, color: Colors.white),
-                        ),
-                        const SizedBox(width: 15),
-                        Icon(Icons.tv, color: Colors.white),
-                        const SizedBox(width: 5),
-                        Text(
-                          'OTT: ${allMovieData['ottAvailable'] ? 'Yes' : 'No'}',
-                          style: const TextStyle(
-                              fontSize: 12, color: Colors.white),
-                        ),
-                      ],
-                    ),
+                    // Row(
+                    //   mainAxisAlignment: MainAxisAlignment.center,
+                    //   children: [
+                    //     // Icon(Icons.remove_red_eye, color: Colors.white),
+                    //     // const SizedBox(width: 5),
+                    //     // Text(
+                    //     //   'Watched: ${allMovieData['watched'] ? 'Yes' : 'No'}',
+                    //     //   style: const TextStyle(
+                    //     //       fontSize: 12, color: Colors.white),
+                    //     // ),
+                    //     const SizedBox(width: 15),
+                    //     Icon(Icons.tv, color: Colors.white),
+                    //     const SizedBox(width: 5),
+                    //     Text(
+                    //       'OTT: ${allMovieData['ottAvailable'] ? 'Yes' : 'No'}',
+                    //       style: const TextStyle(
+                    //           fontSize: 12, color: Colors.white),
+                    //     ),
+                    //   ],
+                    // ),
                     const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,

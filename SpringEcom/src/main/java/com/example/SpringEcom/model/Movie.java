@@ -31,15 +31,33 @@ public class Movie {
 
     private float imdbrating;
     private Date releaseDate;
-    private boolean OttAvailable;
 
-    @Column(nullable = true)
-    private Float userRating;
-    @Column(nullable = true)
-    private String userReview;
+//    @Column(nullable = true)
+//    private Float userRating;
+//    @Column(nullable = true)
+//    private String userReview;
+//
+//    @Column(nullable = true, columnDefinition = "BOOLEAN DEFAULT FALSE")
+//    private boolean Watched;
 
-    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
-    private boolean Watched;
+    private String language;
+    private String country;
 
+    //For Lazy Fetching, the session will close
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "movie_actors",
+            joinColumns = @JoinColumn(name = "movie_id")
+    )
+    @Column(name = "actor_name")
+    private List<String> actorNames = new ArrayList<>();
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "movie_tags",
+            joinColumns = @JoinColumn(name = "movie_id")
+    )
+    @Column(name = "tag")
+    private List<String> tags = new ArrayList<>();
 
 }

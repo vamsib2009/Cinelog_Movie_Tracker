@@ -41,16 +41,16 @@ public class MovieService {
         return movieRepo.searchMovies(keyword);
     }
 
-    public void addOrUpdateRating (int id, Float userRating, String userReview) throws IOException{
-        Movie up_movie = movieRepo.findById(id).orElse(null);
-
-
-        up_movie.setUserRating(userRating);  //I think the DB allows not null, so it should be fine
-        up_movie.setUserReview(userReview);
-        movieRepo.save(up_movie);
-        System.out.println(up_movie.toString()); //This is successful in the first testing
-
-    }
+//    public void addOrUpdateRating (int id, Float userRating, String userReview) throws IOException{
+//        Movie up_movie = movieRepo.findById(id).orElse(null);
+//
+//
+//        up_movie.setUserRating(userRating);  //I think the DB allows not null, so it should be fine
+//        up_movie.setUserReview(userReview);
+//        movieRepo.save(up_movie);
+//        System.out.println(up_movie.toString()); //This is successful in the first testing
+//
+//    }
 
     public void addMovie(Movie movie)
     {

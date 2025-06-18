@@ -1,0 +1,6 @@
+username,password,role
+john_doe,pass123,USER
+admin,adminpass,ADMIN
+jane_doe,password1,USER
+user1,password1,USER
+user2,password2, USER
