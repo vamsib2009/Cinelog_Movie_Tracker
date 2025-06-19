@@ -110,7 +110,7 @@ class _WatchlistPageState extends State<Watchlist> {
                         runSpacing: 20,
                         children: allMovieData.map((rd) {
                           return Container(
-                            height: 450,
+                            height: 370,
                             width: 175,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(10),
@@ -133,7 +133,7 @@ class _WatchlistPageState extends State<Watchlist> {
                                 child: Stack(children: [
                                   Positioned.fill(child: MovieCard(allMovieData: rd)),
                                   Positioned(
-                                    top:4,
+                                    bottom:4,
                                     right: 4,
                                     child: Container(
                                       width: 50,

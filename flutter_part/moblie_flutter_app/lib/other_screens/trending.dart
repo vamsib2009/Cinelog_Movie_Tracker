@@ -76,7 +76,7 @@ class _TrendingPageState extends State<Trending> {
                     runSpacing: 20,
                     children: allMovieData.map((rd) {
                       return Container(
-                        height: 450,
+                        height: 370,
                         width: 175,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(10),

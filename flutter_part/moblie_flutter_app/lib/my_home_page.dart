@@ -128,7 +128,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         runSpacing: 15,
                         children: allMovieData.map((rd) {
                           return Container(
-                            height: 440,
+                            height: 370,
                             width: 175,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(10),

@@ -4,10 +4,21 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class MovieDetails extends StatelessWidget {
+class MovieDetails extends StatefulWidget {
   final Map<String, dynamic> allMovieData;
 
   const MovieDetails({super.key, required this.allMovieData});
+
+  @override
+  State<MovieDetails> createState() => _MovieDetailsState();
+}
+
+class _MovieDetailsState extends State<MovieDetails> {
+  bool watched = false;
+
+  double? userRating;
+
+  String? userReview;
 
   Future<String> fetchPoster(String title) async {
     const apiKey = '2774b611';
@@ -97,7 +108,7 @@ class MovieDetails extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<String>(
-      future: fetchPoster(allMovieData['name']),
+      future: fetchPoster(widget.allMovieData['name']),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -113,13 +124,14 @@ class MovieDetails extends StatelessWidget {
             }
 
             int userId = userSnapshot.data!;
-            int movieId = int.tryParse(allMovieData['id'].toString()) ?? 0;
+            int movieId =
+                int.tryParse(widget.allMovieData['id'].toString()) ?? 0;
 
             return Scaffold(
               appBar: AppBar(
                 backgroundColor: const Color.fromARGB(255, 46, 46, 46),
                 title: Text(
-                  allMovieData['name'],
+                  widget.allMovieData['name'],
                   style: const TextStyle(color: Colors.white),
                 ),
                 iconTheme: const IconThemeData(color: Colors.white),
@@ -140,8 +152,9 @@ class MovieDetails extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 20),
+                    Chip(label: Text(watched ? 'Watched' : 'Not Watched')),
                     Text(
-                      allMovieData['name'],
+                      widget.allMovieData['name'],
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -151,7 +164,7 @@ class MovieDetails extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      allMovieData['description'],
+                      widget.allMovieData['description'],
                       style: const TextStyle(
                         fontSize: 14,
                         color: Colors.white70,
@@ -159,14 +172,14 @@ class MovieDetails extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 12),
-                                        Row(
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Icon(Icons.person_4,
                             size: 14, color: Colors.white),
                         const SizedBox(width: 6),
                         Text(
-                          'Director Name: ${allMovieData['directorName'] ?? 'N/A'}',
+                          'Director Name: ${widget.allMovieData['directorName'] ?? 'N/A'}',
                           style: const TextStyle(
                             fontSize: 12,
                             fontStyle: FontStyle.italic,
@@ -175,21 +188,33 @@ class MovieDetails extends StatelessWidget {
                         ),
                       ],
                     ),
-                    SizedBox(height:12),
+                    SizedBox(height: 12),
+                    Text(
+                      userRating != null
+                          ? 'User Rating: $userRating'
+                          : 'User Rating: N/A',
+                    ),
+                    Text(
+                      userReview != null
+                          ? 'User Review: $userReview'
+                          : 'User Review: N/A',
+                    ),
                     Wrap(
                       spacing: 10,
                       children: [
                         Chip(
-                          label: Text('IMDB: ${allMovieData['imdbrating']}'),
+                          label: Text(
+                              'IMDB: ${widget.allMovieData['imdbrating']}'),
                           backgroundColor: Colors.orange.shade100,
                         ),
                         Chip(
-                          label: Text(allMovieData['category']),
+                          label: Text(widget.allMovieData['category']),
                           backgroundColor: Colors.blue.shade100,
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
+                    buildTagChips(widget.allMovieData['tags']),
 
                     /// 🔥 Stats Section
                     FutureBuilder<List<int>>(
@@ -237,7 +262,7 @@ class MovieDetails extends StatelessWidget {
                             size: 14, color: Colors.white),
                         const SizedBox(width: 6),
                         Text(
-                          'Release Date: ${formatCreatedTime(allMovieData['releaseDate'] ?? 'N/A')}',
+                          'Release Date: ${formatCreatedTime(widget.allMovieData['releaseDate'] ?? 'N/A')}',
                           style: const TextStyle(
                             fontSize: 12,
                             fontStyle: FontStyle.italic,
@@ -252,7 +277,8 @@ class MovieDetails extends StatelessWidget {
                       children: [
                         TextButton.icon(
                           onPressed: () => addToFavorites(context),
-                          icon: Icon(Icons.favorite_sharp, color: Colors.red[600]),
+                          icon: Icon(Icons.favorite_sharp,
+                              color: Colors.red[600]),
                           label: Text(
                             'Add to Favorites',
                             style: TextStyle(
@@ -261,9 +287,10 @@ class MovieDetails extends StatelessWidget {
                             ),
                           ),
                           style: TextButton.styleFrom(
-                            backgroundColor: Colors.white.withValues(alpha: 0.7),
-                            padding:
-                                EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            backgroundColor:
+                                Colors.white.withValues(alpha: 0.7),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -280,9 +307,67 @@ class MovieDetails extends StatelessWidget {
                             ),
                           ),
                           style: TextButton.styleFrom(
-                            backgroundColor: Colors.white.withValues(alpha: 0.7),
-                            padding:
-                                EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            backgroundColor:
+                                Colors.white.withValues(alpha: 0.7),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        TextButton.icon(
+                          onPressed: () => toggleWatched(context),
+                          label: Text(
+                            watched ? 'Remove from watched' : 'Mark as watched',
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          style: TextButton.styleFrom(
+                            backgroundColor:
+                                Colors.white.withValues(alpha: 0.7),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                        TextButton.icon(
+                          onPressed: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(20)),
+                              ),
+                              builder: (context) => reviewBottomSheetContent(
+                                context,
+                              ),
+                            );
+                          },
+                          label: Text(
+                            userReview != null
+                                ? 'Write a review'
+                                : 'Edit review',
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          style: TextButton.styleFrom(
+                            backgroundColor:
+                                Colors.white.withValues(alpha: 0.7),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -304,7 +389,7 @@ class MovieDetails extends StatelessWidget {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int? userId = prefs.getInt('userId');
 
-    int movieId = int.tryParse(allMovieData['id'].toString()) ?? 0;
+    int movieId = int.tryParse(widget.allMovieData['id'].toString()) ?? 0;
 
     final addfavendpoint = Uri.http('10.0.2.2:8080', 'favorites/add', {
       'userId': userId.toString(),
@@ -322,11 +407,63 @@ class MovieDetails extends StatelessWidget {
     }
   }
 
-    Future<void> addToWatchlist(BuildContext context) async {
+  Future<void> getWatched(context) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int? userId = prefs.getInt('userId');
 
-    int movieId = int.tryParse(allMovieData['id'].toString()) ?? 0;
+    int movieId = int.tryParse(widget.allMovieData['id'].toString()) ?? 0;
+
+    final uri = Uri.http('10.0.2.2:8080', 'watched/getwatched', {
+      'movieId': movieId.toString(),
+      'userId': userId.toString(),
+    });
+
+    try {
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        setState(() {
+          watched = data['watched'] ?? false;
+          userRating = (data['userRating'] as num?)?.toDouble();
+          userReview = data['userReview'];
+        });
+      } else {
+        // Handle error or keep default values
+        print('Error ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Failed to fetch watched data: $e');
+    }
+  }
+
+  Future<void> toggleWatched(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int? userId = prefs.getInt('userId');
+
+    int movieId = int.tryParse(widget.allMovieData['id'].toString()) ?? 0;
+
+    final addfavendpoint = Uri.http('10.0.2.2:8080', 'watched/toggle', {
+      'userId': userId.toString(),
+      'movieId': movieId.toString(),
+    });
+
+    try {
+      final response = await http.put(addfavendpoint);
+      print(response.statusCode);
+      setState(() {
+        getWatched(context);
+      });
+    } catch (e) {
+      print('Error Changing $e');
+    }
+  }
+
+  Future<void> addToWatchlist(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int? userId = prefs.getInt('userId');
+
+    int movieId = int.tryParse(widget.allMovieData['id'].toString()) ?? 0;
 
     final addfavendpoint = Uri.http('10.0.2.2:8080', 'watchlist/add', {
       'userId': userId.toString(),
@@ -344,4 +481,164 @@ class MovieDetails extends StatelessWidget {
     }
   }
 
+  Future<void> _submitReview(
+      BuildContext context, double rating, String userReview) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int? userId = prefs.getInt('userId');
+
+    int movieId = int.tryParse(widget.allMovieData['id'].toString()) ?? 0;
+
+    final payload = {
+      "userId": userId.toString(),
+      "movieId": movieId.toString(),
+      "userRating": rating,
+      "userReview": userReview,
+    };
+
+    final url = Uri.parse("http://10.0.2.2:8080/watched/updaterating");
+
+    try {
+      final response = await http.put(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(payload),
+      );
+
+      if (response.statusCode == 200) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Review submitted successfully!")));
+        setState(() {
+          getWatched(context);
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  "Error: ${response.statusCode} ${response.reasonPhrase}")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Submission failed: $e")),
+      );
+    }
+  }
+
+  Widget buildTagChips(List<String> tags) {
+    final List<Color> chipColors = [
+      Colors.teal.shade100,
+      Colors.amber.shade100,
+      Colors.pink.shade100,
+      Colors.blue.shade100,
+      Colors.green.shade100,
+      Colors.purple.shade100,
+      Colors.orange.shade100,
+    ];
+
+    return Center(
+      child: SizedBox(
+        height: 40,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          shrinkWrap: true,
+          itemCount: tags.length,
+          itemBuilder: (context, index) {
+            final tag = tags[index];
+            final color = chipColors[index % chipColors.length];
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Chip(
+                label: Text(
+                  tag,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                backgroundColor: color,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget reviewBottomSheetContent(context) {
+    double userRating = 5.0;
+    final TextEditingController reviewController =
+        TextEditingController(text: userReview ?? '');
+
+    return Padding(
+      padding: EdgeInsets.only(
+        top: 20,
+        left: 20,
+        right: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            "Review for ${widget.allMovieData['name'] ?? 'Movie'}",
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 15),
+          StatefulBuilder(
+            builder: (context, setState) => Column(
+              children: [
+                Slider(
+                  value: userRating,
+                  min: 0,
+                  max: 10,
+                  divisions: 100,
+                  label: userRating.toStringAsFixed(1),
+                  onChanged: (value) => setState(() => userRating = value),
+                ),
+                TextField(
+                  controller: reviewController,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    labelText: "Write your review",
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.send),
+                        label: const Text("Submit"),
+                        onPressed: () async {
+                          await _submitReview(
+                            context,
+                            userRating,
+                            reviewController.text,
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.cancel),
+                        label: const Text("Cancel"),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ),
+                  ],
+                )
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
