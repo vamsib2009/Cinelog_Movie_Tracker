@@ -132,7 +132,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             width: 175,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(10),
-                              color: Colors.white,
+                              color: Colors.transparent,
                             ),
                             child: InkWell(
                               onTap: () {

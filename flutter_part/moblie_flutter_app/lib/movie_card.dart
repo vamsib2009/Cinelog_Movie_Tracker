@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:ui';
+
 
 
 class MovieCard extends StatefulWidget {
@@ -106,177 +108,183 @@ class _MovieCardState extends State<MovieCard> {
     return FutureBuilder<String>(
       future: fetchPoster(widget.allMovieData['name']),
       builder: (context, snapshot) {
-        String posterUrl = snapshot.data ??
+        final posterUrl = snapshot.data ??
             'https://dummyimage.com/300x450/cccccc/ffffff&text=No+Poster';
 
-        return Container(
-          height: 300,
-          width: 160,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15),
-            color: Colors.white,
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 3,
-                offset: Offset(2, 2),
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              height: 300,
+              width: 160,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.white.withOpacity(0.12),
+                    Colors.white.withOpacity(0.05),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withOpacity(0.15)),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black38,
+                    blurRadius: 8,
+                    offset: Offset(2, 4),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(15)),
-                child: Stack(
-                  children: [
-                    Image.network(
-                      posterUrl,
-                      height: 240,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Image.network(
-                        'https://dummyimage.com/300x450/cccccc/ffffff&text=No+Poster',
-                        height: 240,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: getScoreColor(widget.allMovieData['imdbrating'])
-                              .withValues(alpha: 0.95),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.star,
-                                size: 12, color: Colors.amber),
-                            const SizedBox(width: 3),
-                            Text(
-                              '${widget.allMovieData['imdbrating'] ?? 'N/A'}',
-                              style: GoogleFonts.poppins(
-                                fontSize: 11,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 8,
-                      left: 8,
-                      child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: getCategoryColor(widget.allMovieData['category'])
-                                .withValues(alpha: 0.7),
-                            borderRadius: BorderRadius.circular(8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Poster
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(20)),
+                    child: Stack(
+                      children: [
+                        Image.network(
+                          posterUrl,
+                          height: 240,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              height: 240,
+                              color: Colors.black12,
+                              alignment: Alignment.center,
+                              child: const CircularProgressIndicator(
+                                  strokeWidth: 1.5),
+                            );
+                          },
+                          errorBuilder: (_, __, ___) => Container(
+                            height: 240,
+                            color: Colors.black12,
+                            alignment: Alignment.center,
+                            child: const Icon(Icons.broken_image,
+                                color: Colors.white70, size: 30),
                           ),
-                          child: Row(
+                        ),
+                        // IMDb rating
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: _buildGlassBadge(
+                            color: getScoreColor(widget.allMovieData['imdbrating'])
+                                .withOpacity(0.75),
+                            icon: Icons.star,
+                            text: '${widget.allMovieData['imdbrating'] ?? 'N/A'}',
+                          ),
+                        ),
+                        // Category
+                        Positioned(
+                          bottom: 8,
+                          left: 8,
+                          child: _buildGlassBadge(
+                            color: getCategoryColor(widget.allMovieData['category'])
+                                .withOpacity(0.65),
+                            icon: getCategoryIcon(widget.allMovieData['category']),
+                            text: widget.allMovieData['category'] ?? '',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Details
+                  Expanded(
+                    child: Padding(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      child: Stack(
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(
-                                getCategoryIcon(widget.allMovieData['category']),
-                                size: 14,
-                                color: Colors.white,
-                              ),
-                              const SizedBox(width: 4),
                               Text(
-                                widget.allMovieData['category'] ?? '',
-                                style: const TextStyle(
-                                    fontSize: 12, color: Colors.white),
+                                widget.allMovieData['name'] ?? 'Unknown',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                widget.allMovieData['description'] ??
+                                    'No description available',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 11,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                              const Spacer(),
+                              Text(
+                                'Release: ${formatCreatedTime(widget.allMovieData['releaseDate'])}',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 10,
+                                  fontStyle: FontStyle.italic,
+                                  color: Colors.white54,
+                                ),
                               ),
                             ],
-                          )),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Stack(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.allMovieData['name'] ?? 'Unknown',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                            ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            widget.allMovieData['description'] ??
-                                'No description available',
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.montserrat(
-                              fontSize: 11,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          const Spacer(),
-                          Text(
-                            'Release: ${formatCreatedTime(widget.allMovieData['releaseDate'])}',
-                            style: GoogleFonts.montserrat(
-                              fontSize: 10,
-                              fontStyle: FontStyle.italic,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: buildWatchedIndicator(watched),
                           ),
                         ],
                       ),
                     ),
-                    // 🔘 Transparent button
-                    // Positioned(
-                    //   bottom: 8,
-                    //   right: 8,
-                    //   child: ClipRRect(
-                    //     borderRadius: BorderRadius.circular(30),
-                    //     child: Material(
-                    //       color: Colors.black
-                    //           .withOpacity(0.5), // semi-transparent black
-                    //       child: InkWell(
-                    //         onTap: () => _showCategoryOverlay(
-                    //             context, allMovieData['category']),
-                    //         child: Padding(
-                    //           padding: const EdgeInsets.all(6.0),
-                    //           child: Icon(
-                    //             Icons.category,
-                    //             color: Colors.white,
-                    //             size: 20,
-                    //           ),
-                    //         ),
-                    //       ),
-                    //     ),
-                    //   ),
-                    // ),
-                    Positioned(bottom:4, right:4, child: buildWatchedIndicator(watched)),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildGlassBadge(
+      {required Color color, required IconData icon, required String text}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white24),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.4),
+            blurRadius: 4,
+            offset: const Offset(1, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 12, color: Colors.white),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: GoogleFonts.poppins(
+              fontSize: 11,
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

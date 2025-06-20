@@ -17,19 +17,28 @@
 //public class SecurityConfig {
 //
 //    @Bean
+//    //SecurityFilterChain is the servlet that controls the entry point to the application
 //    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
-//
+//        //Disable CSRF token
 //        http.csrf(customizer -> customizer.disable())
+//                //No one should be able to access without Authentication
 //                . authorizeHttpRequests(request -> request.anyRequest().authenticated())
+//                //Enable basic form login
+////                .http.formLogin(Customer.withDefualts())
 //                .httpBasic(Customizer.withDefaults())
+//                //Ways of handling CSRD ->  Make it Stateless, No need to worry about session ID. Give new Session ID everytime make request
 //                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 //
 //        return http.build();
 //
 //    }
 //
+//
+//    //Something to verify the Username Password
+//    //UserDetailsService is an interface, later we have to build class to implement (UserDetialsManager implements it)
 //    @Bean
 //    public UserDetailsService userDetailsService() {
+//        //User implements UserDetails
 //        UserDetails user= User.withDefaultPasswordEncoder()
 //                .username("navin")
 //                .password("n@123")

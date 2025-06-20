@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.grey,
       ),
-      color: Colors.white,
+      color: Color(0xFF0D1B2A),
       home: LoginPage(), //MyHomePage(title: 'Movie Application Page'),
     );
   }
