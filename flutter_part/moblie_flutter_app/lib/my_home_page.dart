@@ -15,11 +15,22 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   List<Map<String, dynamic>> allMovieData = [];
+  int _currentPage = 0;
+  bool _isLoading = false;
+  bool _hasMore = true;
+  final ScrollController _scrollController = ScrollController();
+
+
 
   @override
   void initState() {
     super.initState();
-    fetchMovies();
+    fetchMovies(); // First page
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 300 && !_isLoading && _hasMore) {
+        fetchMovies(); // Load next page
+      }
+    });
   }
 
   // void _filterMovies(String query) {
@@ -35,37 +46,47 @@ class _MyHomePageState extends State<MyHomePage> {
   //   });
   // }
 
-  Future<void> fetchMovies() async {
-    final fetchMovieUrl = Uri.parse('http://10.0.2.2:8080/api/movies');
-    try {
-      final response = await http.get(fetchMovieUrl);
+Future<void> fetchMovies() async {
+  if (_isLoading) return;
+  setState(() {
+    _isLoading = true;
+  });
 
-      if (response.statusCode == 200) {
-        List<dynamic> data = json.decode(response.body);
-        setState(() {
-          allMovieData = data.map<Map<String, dynamic>>((json) {
-            return {
-              'id': json['id']?.toString() ?? '',
-              'name': json['name']?.toString() ?? '',
-              'description': json['description'] ?? '',
-              'directorName': json['directorName']?.toString() ?? '',
-              'category': json['category'] ?? '',
-              'imdbrating': json['imdbrating'] ?? 0.0,
-              'releaseDate': json['releaseDate']?.toString() ?? '',
-              'language': json['language'] ?? '',
-              'country': json['country'] ?? '',
-              'actorNames': List<String>.from(json['actorNames'] ?? []),
-              'tags': List<String>.from(json['tags'] ?? []),
-            };
-          }).toList();
-        });
-      } else {
-        print('Failed to fetch movies. Status code: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error fetching movies: $e');
+  final fetchMovieUrl = Uri.parse('http://10.0.2.2:8080/api/movies?page=$_currentPage&size=15');
+  try {
+    final response = await http.get(fetchMovieUrl);
+    if (response.statusCode == 200) {
+      print(_currentPage);
+      List<dynamic> data = json.decode(response.body);
+      setState(() {
+        allMovieData.addAll(data.map<Map<String, dynamic>>((json) {
+          return {
+            'id': json['id']?.toString() ?? '',
+            'name': json['name']?.toString() ?? '',
+            'description': json['description'] ?? '',
+            'directorName': json['directorName']?.toString() ?? '',
+            'category': json['category'] ?? '',
+            'imdbrating': json['imdbrating'] ?? 0.0,
+            'releaseDate': json['releaseDate']?.toString() ?? '',
+            'language': json['language'] ?? '',
+            'country': json['country'] ?? '',
+            'actorNames': List<String>.from(json['actorNames'] ?? []),
+            'tags': List<String>.from(json['tags'] ?? []),
+          };
+        }));
+
+        _hasMore = data.length == 15; // If less than size, no more pages
+        _currentPage++;
+      });
     }
+  } catch (e) {
+    print('Error: $e');
+  } finally {
+    setState(() {
+      _isLoading = false;
+    });
   }
+}
 
   Future<void> fetchSearchedMovies(String keyword) async {
     final fetchMovieUrl =
@@ -113,6 +134,7 @@ class _MyHomePageState extends State<MyHomePage> {
           child: RefreshIndicator(
             onRefresh: fetchMovies,
             child: SingleChildScrollView(
+              controller: _scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
               child: Container(
                 constraints: BoxConstraints(minHeight: 400),

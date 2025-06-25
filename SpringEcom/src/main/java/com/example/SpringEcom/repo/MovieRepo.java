@@ -1,6 +1,8 @@
 package com.example.SpringEcom.repo;
 
 import com.example.SpringEcom.model.Movie;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -22,5 +24,7 @@ public interface MovieRepo extends JpaRepository<Movie, Integer> {
     List<Movie> searchMovies(String keyword);
 
     Optional<Movie> findByNameAndDirectorNameAndReleaseDate(String name, String directorName, Date releaseDate);
+
+    Page<Movie> findAll(Pageable pageable);
 
 }

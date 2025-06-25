@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,9 +33,12 @@ public class MovieController {
 
     @Transactional
     @GetMapping("/movies")
-    public ResponseEntity<List<Movie>> getMovies() {
-        return new ResponseEntity<>(movieService.getAllMovies(), HttpStatus.OK
-    );
+    public ResponseEntity<List<Movie>> getMovies(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Page<Movie> moviePage = movieService.getPaginatedMovies(page, size);
+        return ResponseEntity.ok(moviePage.getContent());
     }
 
     @GetMapping("/movies/{id}")

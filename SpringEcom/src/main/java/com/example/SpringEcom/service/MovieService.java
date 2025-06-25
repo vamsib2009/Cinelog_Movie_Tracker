@@ -3,6 +3,10 @@ package com.example.SpringEcom.service;
 import com.example.SpringEcom.model.Movie;
 import com.example.SpringEcom.repo.MovieRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +26,11 @@ public class MovieService {
     public List<Movie> getAllMovies()
     {
         return movieRepo.findAll(); //I think find all is a given function
+    }
+
+    public Page<Movie> getPaginatedMovies(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size); //, Sort.by("releaseDate").descending()
+        return movieRepo.findAll(pageable);
     }
 
     public Movie getMovieById(int id) {

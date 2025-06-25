@@ -18,6 +18,7 @@
 //
 //    @Bean
 //    //SecurityFilterChain is the servlet that controls the entry point to the application
+//
 //    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
 //        //Disable CSRF token
 //        http.csrf(customizer -> customizer.disable())
@@ -33,12 +34,21 @@
 //
 //    }
 //
+//        @Bean
+//      public AuthenticationProvider authenticationProvider()
+//        {
+//            DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+//            provider.setPasswordEncode(NoOpPasswordEncoder.getInstance());
+//            provider.setUserDetailsService(userDetailsService());
+//                //provider.setPasswordEncoder(new BCryptPasswordEncoder()): //secure
+//            return provider;
+//        }
 //
 //    //Something to verify the Username Password
 //    //UserDetailsService is an interface, later we have to build class to implement (UserDetialsManager implements it)
 //    @Bean
 //    public UserDetailsService userDetailsService() {
-//        //User implements UserDetails
+//        //User (Inbuilt class)  implements UserDetails (UserDetails is also an interface)
 //        UserDetails user= User.withDefaultPasswordEncoder()
 //                .username("navin")
 //                .password("n@123")
@@ -51,6 +61,7 @@
 //                .roles("ADMIN")
 //                .build();
 //
+//        This Implements user details service since UDS is an interface
 //        return new InMemoryUserDetailsManager(user,admin);
 //    }
 //}
