@@ -58,7 +58,7 @@ public class LoggingService {
         //Total number of accesses for one movie based on that user
         else if(userId != null && movieId != null)
         {
-            return Optional.ofNullable(loggingRepo.findMovieAccessesByUser(movieId, userId));
+            return Optional.ofNullable(loggingRepo.findMovietotalnoofAccesses(movieId));
         }
         else
         {
