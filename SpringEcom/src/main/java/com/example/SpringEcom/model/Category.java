@@ -13,6 +13,7 @@ public enum Category {
     Fantasy,
     History,
     Horror,
+    Music,
     Musical,
     Mystery,
     Romance,

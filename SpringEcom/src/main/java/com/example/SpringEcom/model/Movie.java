@@ -40,8 +40,8 @@ public class Movie {
 //    @Column(nullable = true, columnDefinition = "BOOLEAN DEFAULT FALSE")
 //    private boolean Watched;
 
-    private String language;
-    private String country;
+    private List<String> language = new ArrayList<>();
+    private List<String> country = new ArrayList<>();
 
     //For Lazy Fetching, the session will close
     @ElementCollection(fetch = FetchType.EAGER)
