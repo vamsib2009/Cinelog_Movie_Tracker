@@ -59,9 +59,10 @@ class _MovieCardState extends State<MovieCard> {
 
 
   Future<String> fetchPoster(String title) async {
-    dotenv.load(fileName: ".env");
-    String apiKey = dotenv.get('OMDB_KEY');
-    print(apiKey);
+    //dotenv.load(fileName: ".env");
+    //String apiKey = dotenv.get('OMDB_KEY');
+    const apiKey = '2774b611';
+    //print(apiKey);
     final url = 'http://www.omdbapi.com/?t=$title&apikey=$apiKey';
 
     try {
