@@ -1,3 +1,9 @@
 __pycache__/
 Cinelog_Scrapers/clip-ai-env/
 .env
+Streamlit_files/__pycache__/
+flutter_part/mobile_flutter_app/android
+flutter_part/mobile_flutter_app/ios
+flutter_part/mobile_flutter_app/build
+flutter_part/mobile_flutter_app/windows
+flutter_part/mobile_flutter_app/linux
