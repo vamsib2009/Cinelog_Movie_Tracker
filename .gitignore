@@ -1,2 +1,3 @@
 __pycache__/
 Cinelog_Scrapers/clip-ai-env/
+.env

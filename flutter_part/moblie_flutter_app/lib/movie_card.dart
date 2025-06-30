@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:ui';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 
 
 
@@ -57,7 +59,9 @@ class _MovieCardState extends State<MovieCard> {
 
 
   Future<String> fetchPoster(String title) async {
-    const apiKey = '2774b611';
+    dotenv.load(fileName: ".env");
+    String apiKey = dotenv.get('OMDB_KEY');
+    print(apiKey);
     final url = 'http://www.omdbapi.com/?t=$title&apikey=$apiKey';
 
     try {
