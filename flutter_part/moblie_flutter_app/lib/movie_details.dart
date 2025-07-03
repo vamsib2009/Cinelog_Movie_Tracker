@@ -106,284 +106,258 @@ class _MovieDetailsState extends State<MovieDetails> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<String>(
-      future: fetchPoster(widget.allMovieData['name']),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+@override
+Widget build(BuildContext context) {
+  return FutureBuilder<String>(
+    future: fetchPoster(widget.allMovieData['name']),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Center(child: CircularProgressIndicator());
+      }
 
-        String posterUrl = snapshot.data ?? 'https://via.placeholder.com/150';
+      String posterUrl = snapshot.data ?? 'https://via.placeholder.com/150';
 
-        return FutureBuilder<int>(
-          future: getUserId(),
-          builder: (context, userSnapshot) {
-            if (!userSnapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
-            }
+      return FutureBuilder<int>(
+        future: getUserId(),
+        builder: (context, userSnapshot) {
+          if (!userSnapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-            int userId = userSnapshot.data!;
-            int movieId =
-                int.tryParse(widget.allMovieData['id'].toString()) ?? 0;
+          int userId = userSnapshot.data!;
+          int movieId = int.tryParse(widget.allMovieData['id'].toString()) ?? 0;
 
-            return Scaffold(
-              appBar: AppBar(
-                backgroundColor: const Color.fromARGB(255, 46, 46, 46),
-                title: Text(
-                  widget.allMovieData['name'],
-                  style: const TextStyle(color: Colors.white),
-                ),
-                iconTheme: const IconThemeData(color: Colors.white),
+          return Scaffold(
+            appBar: AppBar(
+              backgroundColor: const Color(0xFF1C1C1E),
+              title: Text(
+                widget.allMovieData['name'],
+                style: const TextStyle(color: Colors.white),
               ),
-              backgroundColor: const Color.fromARGB(115, 158, 158, 158),
-              body: SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        posterUrl,
-                        height: 350,
-                        width: 240,
-                        fit: BoxFit.cover,
-                      ),
+              iconTheme: const IconThemeData(color: Colors.white),
+            ),
+            backgroundColor: const Color(0xFF121212),
+            body: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.network(
+                      posterUrl,
+                      height: 360,
+                      width: 240,
+                      fit: BoxFit.cover,
                     ),
-                    const SizedBox(height: 20),
-                    Chip(label: Text(watched ? 'Watched' : 'Not Watched')),
-                    Text(
-                      widget.allMovieData['name'],
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      widget.allMovieData['description'],
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.white70,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.person_4,
-                            size: 14, color: Colors.white),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Director Name: ${widget.allMovieData['directorName'] ?? 'N/A'}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 12),
-                    Text(
-                      userRating != null
-                          ? 'User Rating: $userRating'
-                          : 'User Rating: N/A',
-                    ),
-                    Text(
-                      userReview != null
-                          ? 'User Review: $userReview'
-                          : 'User Review: N/A',
-                    ),
-                    Wrap(
-                      spacing: 10,
-                      children: [
-                        Chip(
-                          label: Text(
-                              'IMDB: ${widget.allMovieData['imdbrating']}'),
-                          backgroundColor: Colors.orange.shade100,
-                        ),
-                        Chip(
-                          label: Text(widget.allMovieData['category']),
-                          backgroundColor: Colors.blue.shade100,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    buildTagChips(widget.allMovieData['tags']),
+                  ),
+                  const SizedBox(height: 20),
 
-                    /// 🔥 Stats Section
-                    FutureBuilder<List<int>>(
-                      future: fetchMovieStats(movieId, userId),
-                      builder: (context, statSnapshot) {
-                        if (statSnapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const CircularProgressIndicator();
-                        } else if (statSnapshot.hasError) {
-                          return const Text('Failed to load stats',
-                              style: TextStyle(color: Colors.red));
-                        } else if (!statSnapshot.hasData ||
-                            statSnapshot.data!.length != 3) {
-                          return const Text('No stats available');
-                        }
-                        return buildStatsRow(statSnapshot.data!);
-                      },
+                  Chip(
+                    label: Text(
+                      watched ? 'Watched' : 'Not Watched',
+                      style: const TextStyle(color: Colors.white),
                     ),
+                    backgroundColor:
+                        watched ? Colors.green.shade600 : Colors.grey.shade700,
+                  ),
+                  const SizedBox(height: 12),
 
-                    // Row(
-                    //   mainAxisAlignment: MainAxisAlignment.center,
-                    //   children: [
-                    //     // Icon(Icons.remove_red_eye, color: Colors.white),
-                    //     // const SizedBox(width: 5),
-                    //     // Text(
-                    //     //   'Watched: ${allMovieData['watched'] ? 'Yes' : 'No'}',
-                    //     //   style: const TextStyle(
-                    //     //       fontSize: 12, color: Colors.white),
-                    //     // ),
-                    //     const SizedBox(width: 15),
-                    //     Icon(Icons.tv, color: Colors.white),
-                    //     const SizedBox(width: 5),
-                    //     Text(
-                    //       'OTT: ${allMovieData['ottAvailable'] ? 'Yes' : 'No'}',
-                    //       style: const TextStyle(
-                    //           fontSize: 12, color: Colors.white),
-                    //     ),
-                    //   ],
-                    // ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.calendar_today,
-                            size: 14, color: Colors.white),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Release Date: ${formatCreatedTime(widget.allMovieData['releaseDate'] ?? 'N/A')}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontStyle: FontStyle.italic,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
+                  Text(
+                    widget.allMovieData['name'],
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        TextButton.icon(
-                          onPressed: () => addToFavorites(context),
-                          icon: Icon(Icons.favorite_sharp,
-                              color: Colors.red[600]),
-                          label: Text(
-                            'Add to Favorites',
-                            style: TextStyle(
-                              color: Colors.red,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          style: TextButton.styleFrom(
-                            backgroundColor:
-                                Colors.white.withValues(alpha: 0.7),
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                        ),
-                        TextButton.icon(
-                          onPressed: () => addToWatchlist(context),
-                          icon: Icon(Icons.list_rounded, color: Colors.black),
-                          label: Text(
-                            'Add to Watchlist',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          style: TextButton.styleFrom(
-                            backgroundColor:
-                                Colors.white.withValues(alpha: 0.7),
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                        ),
-                      ],
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 10),
+
+                  Text(
+                    widget.allMovieData['description'],
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: Colors.white70,
                     ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        TextButton.icon(
-                          onPressed: () => toggleWatched(context),
-                          label: Text(
-                            watched ? 'Remove from watched' : 'Mark as watched',
-                            style: TextStyle(
-                              color: Colors.red,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          style: TextButton.styleFrom(
-                            backgroundColor:
-                                Colors.white.withValues(alpha: 0.7),
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
+                    textAlign: TextAlign.center,
+                  ),
+
+                  const SizedBox(height: 20),
+                  Divider(color: Colors.white24),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.person_4, size: 16, color: Colors.grey),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Director: ${widget.allMovieData['directorName'] ?? 'N/A'}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.grey,
                         ),
-                        TextButton.icon(
-                          onPressed: () {
-                            showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.vertical(
-                                    top: Radius.circular(20)),
-                              ),
-                              builder: (context) => reviewBottomSheetContent(
-                                context,
-                              ),
-                            );
-                          },
-                          label: Text(
-                            userReview != null
-                                ? 'Write a review'
-                                : 'Edit review',
-                            style: TextStyle(
-                              color: Colors.red,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          style: TextButton.styleFrom(
-                            backgroundColor:
-                                Colors.white.withValues(alpha: 0.7),
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 10),
+                  Text(
+                    userRating != null
+                        ? 'User Rating: $userRating'
+                        : 'User Rating: N/A',
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                  Text(
+                    userReview != null
+                        ? 'User Review: $userReview'
+                        : 'User Review: N/A',
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      Chip(
+                        label: Text('IMDB: ${widget.allMovieData['imdbrating']}'),
+                        backgroundColor: Colors.deepOrange.shade200,
+                      ),
+                      Chip(
+                        label: Text(widget.allMovieData['category']),
+                        backgroundColor: Colors.blueAccent.shade100,
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 14),
+                  buildTagChips(widget.allMovieData['tags']),
+
+                  const SizedBox(height: 20),
+                  Divider(color: Colors.white24),
+
+                  FutureBuilder<List<int>>(
+                    future: fetchMovieStats(movieId, userId),
+                    builder: (context, statSnapshot) {
+                      if (statSnapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        return const CircularProgressIndicator();
+                      } else if (statSnapshot.hasError) {
+                        return const Text('Failed to load stats',
+                            style: TextStyle(color: Colors.red));
+                      } else if (!statSnapshot.hasData ||
+                          statSnapshot.data!.length != 3) {
+                        return const Text('No stats available');
+                      }
+                      return buildStatsRow(statSnapshot.data!);
+                    },
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Released: ${formatCreatedTime(widget.allMovieData['releaseDate'] ?? 'N/A')}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                          color: Colors.grey,
                         ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  /// Buttons
+                  Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          buildActionButton(
+                            onPressed: () => addToFavorites(context),
+                            icon: Icons.favorite,
+                            label: 'Favorite',
+                            color: Colors.redAccent,
+                          ),
+                          buildActionButton(
+                            onPressed: () => addToWatchlist(context),
+                            icon: Icons.list,
+                            label: 'Watchlist',
+                            color: Colors.teal,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          buildActionButton(
+                            onPressed: () => toggleWatched(context),
+                            icon: watched ? Icons.visibility_off : Icons.visibility,
+                            label:
+                                watched ? 'Unmark Watched' : 'Mark as Watched',
+                            color: Colors.orange,
+                          ),
+                          buildActionButton(
+                            onPressed: () {
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.vertical(
+                                      top: Radius.circular(20)),
+                                ),
+                                builder: (context) =>
+                                    reviewBottomSheetContent(context),
+                              );
+                            },
+                            icon: Icons.rate_review,
+                            label: userReview != null
+                                ? 'Edit Review'
+                                : 'Write Review',
+                            color: Colors.indigoAccent,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 30),
+                ],
               ),
-            );
-          },
-        );
-      },
-    );
-  }
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
+Widget buildActionButton({
+  required VoidCallback onPressed,
+  required IconData icon,
+  required String label,
+  required Color color,
+}) {
+  return ElevatedButton.icon(
+    onPressed: onPressed,
+    icon: Icon(icon, color: Colors.white),
+    label: Text(label, style: const TextStyle(color: Colors.white)),
+    style: ElevatedButton.styleFrom(
+      backgroundColor: color,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ),
+  );
+}
+
 
   Future<void> addToFavorites(BuildContext context) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
