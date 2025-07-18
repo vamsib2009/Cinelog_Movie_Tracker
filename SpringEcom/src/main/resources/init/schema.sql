@@ -1,0 +1,19 @@
+-- -- 1. Enable pgvector extension
+-- -- Ensure you install the "vector" extension before running this command.
+-- -- If you're using a PostgreSQL version or environment where this extension is not available,
+-- -- you need to install it or switch to a compatible setup.
+--
+-- -- Corrected version of the code once the extension is appropriately installed:
+-- CREATE EXTENSION IF NOT EXISTS vector;
+--
+-- -- 2. Create table with vector field
+-- CREATE TABLE movie_embeddings (
+--                                   id SERIAL PRIMARY KEY,
+--                                   title TEXT,
+--                                   embedding VECTOR(1536) -- assuming OpenAI embeddings
+-- );
+--
+-- -- 3. Optional: Add index for fast search
+-- -- Use either L2, cosine, or inner product
+-- CREATE INDEX ON movie_embeddings USING ivfflat (embedding vector_l2_ops)
+--     WITH (lists = 100);

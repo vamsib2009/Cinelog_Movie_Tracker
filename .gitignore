@@ -7,3 +7,5 @@ flutter_part/mobile_flutter_app/ios
 flutter_part/mobile_flutter_app/build
 flutter_part/mobile_flutter_app/windows
 flutter_part/mobile_flutter_app/linux
+.idea/
+flutter_part/moblie_flutter_app/android/app/

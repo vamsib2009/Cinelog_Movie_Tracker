@@ -1,0 +1,23 @@
+version: "3.7"
+
+services:
+  app:
+      build:
+        dockerfile: Dockerfile
+      ports:
+        - "8080:8080"
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: vamsi
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: dmoviesb
+    ports:
+      - 5433:5432
+    volumes:
+      - postgres-movie-data:/var/lib/postgresql/data
+
+
+volumes:
+    postgres-movie-data:
