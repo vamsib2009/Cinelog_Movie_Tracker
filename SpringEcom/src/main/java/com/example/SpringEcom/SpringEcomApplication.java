@@ -1,7 +1,10 @@
 package com.example.SpringEcom;
 
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+
 import java.util.*;
 import java.sql.*;
 import java.util.Date;
@@ -21,6 +24,7 @@ public class SpringEcomApplication {
 
 
 		System.out.println("Formatted Date-Time: " + now);
+
 
 	}
 

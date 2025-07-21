@@ -2,10 +2,10 @@ version: "3.7"
 
 services:
   app:
-      build:
-        dockerfile: Dockerfile
-      ports:
-        - "8080:8080"
+    build:
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
 
   postgres:
     image: postgres:latest
@@ -20,4 +20,4 @@ services:
 
 
 volumes:
-    postgres-movie-data:
+  postgres-movie-data:

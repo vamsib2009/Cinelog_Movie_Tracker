@@ -29,6 +29,9 @@ public class UserInitializer {
     @PostConstruct
     public void loadUsersFromCSV() {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(csvResource.getInputStream()))) {
+//            userRepo.deleteAll();
+//            insertedIds.clear();  // Delete the entire DB because previous duplicate value issue
+
             String line = reader.readLine(); // Skip header
             int lineNum = 1;
 
@@ -42,6 +45,17 @@ public class UserInitializer {
                 }
 
                 try {
+                    String username = parts[0].trim();
+                    String password = parts[1].trim();
+                    String role = parts[2].trim().toUpperCase();
+
+                    // ✅ Skip if user already exists
+                    if (userRepo.findByUsername(username).isPresent()) {
+                        System.out.println("⚠️ Skipping duplicate user: " + username);
+                        continue;
+                    }
+
+
                     User user = new User();
                     user.setUsername(parts[0].trim());
                     user.setPassword(parts[1].trim());
@@ -60,13 +74,13 @@ public class UserInitializer {
         }
     }
 
-    @PreDestroy
-    public void deleteCSVLoadedUsers() {
-        try {
-            userRepo.deleteAllById(insertedIds);
-            System.out.println("🧹 Deleted CSV-loaded users.");
-        } catch (Exception e) {
-            System.err.println("❌ Failed to delete users: " + e.getMessage());
-        }
-    }
+//    @PreDestroy
+//    public void deleteCSVLoadedUsers() {
+//        try {
+//            userRepo.deleteAllById(insertedIds);
+//            System.out.println("🧹 Deleted CSV-loaded users.");
+//        } catch (Exception e) {
+//            System.err.println("❌ Failed to delete users: " + e.getMessage());
+//        }
+//    }
 }
