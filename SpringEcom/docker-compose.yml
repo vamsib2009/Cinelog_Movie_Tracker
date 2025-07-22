@@ -8,16 +8,25 @@ services:
       - "8080:8080"
 
   postgres:
-    image: postgres:latest
+    image: pgvector/pgvector:0.8.0-pg17 #postgres:latest (Basically new image is postgres + vector extension installed)
     environment:
       POSTGRES_USER: vamsi
       POSTGRES_PASSWORD: 1234
       POSTGRES_DB: dmoviesb
     ports:
-      - 5433:5432
+      - 5432:5432
     volumes:
       - postgres-movie-data:/var/lib/postgresql/data
 
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: vb@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80" #so this port maps to computer browser
+    depends_on:
+      - postgres
 
 volumes:
   postgres-movie-data:

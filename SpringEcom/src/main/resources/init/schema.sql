@@ -10,10 +10,12 @@
 -- CREATE TABLE movie_embeddings (
 --                                   id SERIAL PRIMARY KEY,
 --                                   title TEXT,
---                                   embedding VECTOR(1536) -- assuming OpenAI embeddings
+--                                   embedding VECTOR(1536) -- assuming largest SIGLIP embedding size
 -- );
 --
 -- -- 3. Optional: Add index for fast search
 -- -- Use either L2, cosine, or inner product
 -- CREATE INDEX ON movie_embeddings USING ivfflat (embedding vector_l2_ops)
 --     WITH (lists = 100);
+
+--For now manually pasted this query in container pgadmin
