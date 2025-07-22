@@ -1,24 +1,28 @@
 //package com.example.SpringEcom.config;
 //
-//import org.springframework.ai.vectorstore.pgvector.PgVectorStore;
-//import org.springframework.context.annotation.Bean;
+//import jakarta.annotation.PostConstruct;
+//import lombok.RequiredArgsConstructor;
 //import org.springframework.context.annotation.Configuration;
 //import org.springframework.jdbc.core.JdbcTemplate;
-//import org.springframework.ai.embedding.EmbeddingModel;
-//import org.springframework.ai.vectorstore.SimpleVectorStore;
-//import org.springframework.ai.vectorstore.VectorStore;
-//import org.springframework.beans.factory.annotation.Qualifier;
-//import org.springframework.context.annotation.Bean;
-//import org.springframework.context.annotation.Configuration;
-//
-//
 //
 //@Configuration
+//@RequiredArgsConstructor
 //public class AIConfig {
 //
-//    @Bean
-//    public VectorStore vectorStore(JdbcTemplate jdbcTemplate, EmbeddingModel embeddingModel)
-//    {
-//        return PgVectorStore.builder(jdbcTemplate, embeddingModel).build();
+//    private final JdbcTemplate jdbcTemplate;
+//
+//    @PostConstruct
+//    public void initVectorTables() {
+//        System.out.println("🧠 Initializing vector tables");
+//
+//        jdbcTemplate.execute("CREATE EXTENSION IF NOT EXISTS vector;");
+//        jdbcTemplate.execute("""
+//            CREATE TABLE poster_embeddings (
+//                id SERIAL PRIMARY KEY,
+//                movie_id INT,
+//                embedding VECTOR(512)
+//            );
+//        """);
+//        System.out.println("✅ Vector table created successfully");
 //    }
 //}

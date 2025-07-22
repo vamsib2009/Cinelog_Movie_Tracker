@@ -6,6 +6,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
+    depends_on:
+      - postgres
 
   postgres:
     image: pgvector/pgvector:0.8.0-pg17 #postgres:latest (Basically new image is postgres + vector extension installed)
