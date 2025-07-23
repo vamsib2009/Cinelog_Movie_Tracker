@@ -21,6 +21,7 @@ public class PlotEmbeddings {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Setter
     @ManyToOne
     @JoinColumn(name = "movie_id", nullable = false)
     private Movie movie;

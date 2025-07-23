@@ -2,6 +2,7 @@ package com.example.SpringEcom.config;
 
 import com.example.SpringEcom.model.Category;
 import com.example.SpringEcom.model.Movie;
+import com.example.SpringEcom.model.PlotEmbeddings;
 import com.example.SpringEcom.model.PosterEmbeddings;
 import com.example.SpringEcom.repo.MovieRepo;
 import com.example.SpringEcom.repo.PlotEmbeddingRepo;
@@ -42,15 +43,17 @@ public class MovieInitializer {
     private final DataSource dataSource;
     private final VectorStore vectorStore;
     private final PosterEmbeddingRepo posterRepo;
+    private final PlotEmbeddingRepo plotRepo;
 
     private final List<Integer> insertedIds = new ArrayList<>();
 
     @Autowired
-    public MovieInitializer(MovieRepo movieRepository, DataSource dataSource, VectorStore vectorStore, PosterEmbeddingRepo posterRepo) {
+    public MovieInitializer(MovieRepo movieRepository, DataSource dataSource, VectorStore vectorStore, PosterEmbeddingRepo posterRepo, PlotEmbeddingRepo plotRepo) {
         this.movieRepository = movieRepository;
         this.dataSource = dataSource;
         this.vectorStore = vectorStore;
         this.posterRepo = posterRepo;
+        this.plotRepo = plotRepo;
     }
 
     @Value("classpath:movies.jsonl")
@@ -124,6 +127,7 @@ public class MovieInitializer {
 
                     Movie savedMovie = movieRepository.save(movie);
 
+                    //Process Poster Embeddings
                     PosterEmbeddings posterEmbeddings = new PosterEmbeddings();
 
                     float[] embeddingArray = new float[512];
@@ -133,6 +137,19 @@ public class MovieInitializer {
                     posterEmbeddings.setEmbedding(embeddingArray);
                     posterEmbeddings.setMovie(savedMovie);
                     posterRepo.save(posterEmbeddings);
+
+                    //Process Plot Embeddings
+                    PlotEmbeddings plotEmbeddings = new PlotEmbeddings();
+
+                    float[] plotEmbeddingArray = new float[512];
+                    for (int i = 0; i < plotEmbeddingArray.length; i++) {
+                        plotEmbeddingArray[i] = Float.parseFloat(json.get("plot_embedding").get(i).asText());
+                    }
+                    plotEmbeddings.setEmbedding(plotEmbeddingArray);
+                    plotEmbeddings.setMovie(savedMovie);
+                    plotRepo.save(plotEmbeddings);
+
+
 
 
             System.out.println("✅ Movies loaded from JSONL if not already present.");
