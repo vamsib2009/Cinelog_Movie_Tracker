@@ -1,8 +1,6 @@
--- -- 2. Create table with vector field
---
--- CREATE EXTENSION IF NOT EXISTS vector;
---
---
+CREATE EXTENSION IF NOT EXISTS vector;
+
+
 -- CREATE TABLE poster_embeddings (
 --                                    id SERIAL PRIMARY KEY,
 --                                    movie_id INT REFERENCES movie(id) ON DELETE CASCADE,

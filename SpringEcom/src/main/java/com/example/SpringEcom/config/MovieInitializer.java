@@ -2,17 +2,27 @@ package com.example.SpringEcom.config;
 
 import com.example.SpringEcom.model.Category;
 import com.example.SpringEcom.model.Movie;
+import com.example.SpringEcom.model.PosterEmbeddings;
 import com.example.SpringEcom.repo.MovieRepo;
+import com.example.SpringEcom.repo.PlotEmbeddingRepo;
+import com.example.SpringEcom.repo.PosterEmbeddingRepo;
+import com.pgvector.PGvector;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import org.springframework.ai.content.Media;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Types;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -30,12 +40,17 @@ public class MovieInitializer {
 
     private final MovieRepo movieRepository;
     private final DataSource dataSource;
+    private final VectorStore vectorStore;
+    private final PosterEmbeddingRepo posterRepo;
 
     private final List<Integer> insertedIds = new ArrayList<>();
 
-    public MovieInitializer(MovieRepo movieRepository, DataSource dataSource) {
+    @Autowired
+    public MovieInitializer(MovieRepo movieRepository, DataSource dataSource, VectorStore vectorStore, PosterEmbeddingRepo posterRepo) {
         this.movieRepository = movieRepository;
         this.dataSource = dataSource;
+        this.vectorStore = vectorStore;
+        this.posterRepo = posterRepo;
     }
 
     @Value("classpath:movies.jsonl")
@@ -55,6 +70,7 @@ public class MovieInitializer {
                     String name = json.get("title").asText();
                     String directorName = json.get("director").asText();
                     String releaseDateStr = json.get("release_date").asText();
+                    String plot = json.get("plot").asText();
 
                     // Skip if required fields are missing or null
                     if (name == null || directorName == null || releaseDateStr == null) {
@@ -83,7 +99,7 @@ public class MovieInitializer {
 
                     Movie movie = new Movie();
                     movie.setName(name);
-                    movie.setDescription(json.get("plot").asText());
+                    movie.setDescription(plot);
                     movie.setDirectorName(directorName);
 
                     try {
@@ -106,47 +122,18 @@ public class MovieInitializer {
                     //Temporatily save as dummy
                     movie.setTags(Arrays.asList("dummy","dummy"));
 
-                    Movie saved = movieRepository.save(movie);
+                    Movie savedMovie = movieRepository.save(movie);
 
-                    // Extract embedding array
-                    JsonNode embeddingNode = json.get("poster_embedding");
-                    if (embeddingNode == null || !embeddingNode.isArray() || embeddingNode.size() != 512) {
-                        System.out.println("⚠️ Skipping embedding insert for '" + name + "' due to missing/invalid embedding.");
-                        continue;
+                    PosterEmbeddings posterEmbeddings = new PosterEmbeddings();
+
+                    float[] embeddingArray = new float[512];
+                    for (int i = 0; i < embeddingArray.length; i++) {
+                        embeddingArray[i] = Float.parseFloat(json.get("poster_embedding").get(i).asText());
                     }
+                    posterEmbeddings.setEmbedding(embeddingArray);
+                    posterEmbeddings.setMovie(savedMovie);
+                    posterRepo.save(posterEmbeddings);
 
-                    // Convert to vector string format for pgvector
-                    StringBuilder embeddingStr = new StringBuilder("[");
-                    for (int j = 0; j < embeddingNode.size(); j++) {
-                        embeddingStr.append(embeddingNode.get(j).asDouble());
-                        if (j < embeddingNode.size() - 1) embeddingStr.append(",");
-                    }
-                    embeddingStr.append("]");
-
-                    // Insert into poster_embeddings table
-                    String sql = "INSERT INTO poster_embeddings (movie_id, embedding) VALUES (?, ?)";
-
-                    try (Connection conn = dataSource.getConnection();
-                         PreparedStatement ps = conn.prepareStatement(sql)) {
-                        System.out.println("Preparing to insert embedding for movie ID: " + saved.getId());
-                        System.out.println("Embedding vector: " + embeddingStr);
-                        conn.setAutoCommit(true);  // OR false + commit()
-                        ps.setInt(1, saved.getId());
-                        ps.setObject(2, embeddingStr.toString(), Types.OTHER); // pgvector handles VECTOR casting
-                        System.out.println("Preparing to insert embedding for movie ID: " + saved.getId());
-                        ps.executeUpdate();
-                        System.out.println("Inserted embedding for movie '" + name + "' with ID " + saved.getId() + "");
-
-                    } catch (Exception e) {
-                        System.err.println("❌ Failed to insert embedding for movie '" + name + "': " + e.getMessage());
-                    }
-
-
-                } catch (Exception e) {
-                    System.err.println("Error processing movie entry: " + e.getMessage());
-                    continue; // Skip this movie and continue with the next one
-                }
-            }
 
             System.out.println("✅ Movies loaded from JSONL if not already present.");
         } catch (Exception e) {
@@ -165,4 +152,6 @@ public class MovieInitializer {
 //            e.printStackTrace();
 //        }
 //    }
-}
+} catch (IOException e) {
+            throw new RuntimeException(e);
+        }}}
