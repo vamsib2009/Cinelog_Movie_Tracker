@@ -42,5 +42,24 @@ public class EmbeddingsTestController {
         return ResponseEntity.ok(m);
     }
 
+    //Test the working in multimodal space From Plot to Poster
+    @GetMapping("/posters/{movieId}/similarplot")
+    public ResponseEntity<List<Movie>> findSimilarPostersfromPlot(
+            @PathVariable Integer movieId,
+            @RequestParam(defaultValue = "5") int limit) {
+
+        // Directly call the repository method and return the results
+        List<Integer> similarItems = repository.findPlotToPosterEmbeddings(movieId, limit);
+        List<Movie> m = new ArrayList<>();
+        for (Integer id : similarItems) {
+            // Process each 'id' one by one
+            Movie moviex = movieRepo.findMovieById(id);
+            m.add(moviex);
+            // You could call another method here, e.g., movieService.getDetails(id);
+        }
+
+        return ResponseEntity.ok(m);
+    }
+
 
 }

@@ -21,4 +21,16 @@ public interface PosterEmbeddingRepo extends JpaRepository<PosterEmbeddings, Int
     """)
     List<Integer> findSimilarMovieIds(@Param("movieId") Integer movieId, @Param("limit") int limit);
 
+    //Poster to plot
+    @Query("""
+    SELECT p.movie.id
+    FROM PlotEmbeddings p
+    WHERE p.movie.id != :movieId
+    ORDER BY cosine_distance(
+        p.embedding,
+        (SELECT p2.embedding FROM PosterEmbeddings p2 WHERE p2.movie.id = :movieId)
+    )
+    LIMIT :limit
+""")
+    List<Integer> findPlotToPosterEmbeddings(@Param("movieId") Integer movieId, @Param("limit") int limit);
 }
