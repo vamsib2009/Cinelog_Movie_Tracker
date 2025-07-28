@@ -86,17 +86,14 @@ public class MovieController {
         return new ResponseEntity<>(movies, HttpStatus.OK);
     }
 
+    //Embeddings related services
 
-    //Add Image to a certain query
-//    @PutMapping("/movies/{id}")
-//    public ResponseEntity<String> updateMovie(@PathVariable int id, @RequestPart Movie movie, @RequestPart MultipartFile imageFile){
-//        Movie updatedMovie = null;
-//        try{
-//            updatedMovie = movieService.updateMovie(movie, imageFile);
-//            return new ResponseEntity<>("Updated", HttpStatus.OK);
-//        }
-//        catch (IOException e){
-//            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-//        }
-//    }
+    @GetMapping("/similarmoviesbyposter")
+    public ResponseEntity<List<Movie>> findSimilarMoviesByPoster(@RequestParam Integer movieId)
+    {
+        List<Movie> movies = movieService.findSimilarMoviesByPoster(movieId);
+        return new ResponseEntity<>(movies, HttpStatus.OK);
+    }
+
+
 }

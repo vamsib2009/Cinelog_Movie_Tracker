@@ -2,6 +2,7 @@ package com.example.SpringEcom.service;
 
 import com.example.SpringEcom.model.Movie;
 import com.example.SpringEcom.repo.MovieRepo;
+import org.springframework.ai.observation.conventions.VectorStoreSimilarityMetric;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -64,5 +65,15 @@ public class MovieService {
     public void addMovie(Movie movie)
     {
         movieRepo.save(movie);
+    }
+
+    //Embedding Services for posters and all
+    public List<Movie> findSimilarMoviesByPoster(Integer movieId)
+    {
+        Movie movie = movieRepo.findById(movieId).orElse(null);
+        float[] posterembed = movie.getPosterEmbedding();
+
+        return movieRepo.searchByPosterEmbedding(posterembed, movieId, 5);
+
     }
 }

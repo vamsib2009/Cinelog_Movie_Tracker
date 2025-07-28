@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
+import 'package:moblie_flutter_app/my_home_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MovieDetails extends StatefulWidget {
@@ -15,10 +16,16 @@ class MovieDetails extends StatefulWidget {
 
 class _MovieDetailsState extends State<MovieDetails> {
   bool watched = false;
+  List<Map<String, dynamic>> newMovieData = [];
 
   double? userRating;
 
   String? userReview;
+
+  void initState() {
+    super.initState();
+    fetchRecommendedMovies(widget.allMovieData['id'].toString());
+  }
 
   Future<String> fetchPoster(String title) async {
     const apiKey = '2774b611';
@@ -100,264 +107,364 @@ class _MovieDetailsState extends State<MovieDetails> {
     );
   }
 
+  Future<void> fetchRecommendedMovies(String movieId) async {
+    final fetchMovieUrl = Uri.parse(
+        'http://10.0.2.2:8080/api/similarmoviesbyposter?movieId=$movieId');
+    try {
+      final response = await http.get(fetchMovieUrl);
+
+      if (response.statusCode == 200) {
+        List<dynamic> data = json.decode(response.body);
+        setState(() {
+          newMovieData = data.map<Map<String, dynamic>>((json) {
+            return {
+              'id': json['id']?.toString() ?? '',
+              'name': json['name']?.toString() ?? '',
+              'description': json['description'] ?? '',
+              'directorName': json['directorName']?.toString() ?? '',
+              'category': json['category'] ?? '',
+              'imdbrating': json['imdbrating'] ?? 0.0,
+              'releaseDate': json['releaseDate']?.toString() ?? '',
+              'language': json['language'] ?? '',
+              'country': json['country'] ?? '',
+              'actorNames': List<String>.from(json['actorNames'] ?? []),
+              'tags': List<String>.from(json['tags'] ?? []),
+            };
+          }).toList();
+        });
+      } else {
+        print('Failed to fetch movies. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching movies: $e');
+    }
+  }
+
   Future<int> getUserId() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getInt('userId') ?? 0;
   }
 
   @override
-@override
-Widget build(BuildContext context) {
-  return FutureBuilder<String>(
-    future: fetchPoster(widget.allMovieData['name']),
-    builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return const Center(child: CircularProgressIndicator());
-      }
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<String>(
+      future: fetchPoster(widget.allMovieData['name']),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-      String posterUrl = snapshot.data ?? 'https://via.placeholder.com/150';
+        String posterUrl = snapshot.data ?? 'https://via.placeholder.com/150';
 
-      return FutureBuilder<int>(
-        future: getUserId(),
-        builder: (context, userSnapshot) {
-          if (!userSnapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+        return FutureBuilder<int>(
+          future: getUserId(),
+          builder: (context, userSnapshot) {
+            if (!userSnapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          int userId = userSnapshot.data!;
-          int movieId = int.tryParse(widget.allMovieData['id'].toString()) ?? 0;
+            int userId = userSnapshot.data!;
+            int movieId =
+                int.tryParse(widget.allMovieData['id'].toString()) ?? 0;
 
-          return Scaffold(
-            appBar: AppBar(
-              backgroundColor: const Color(0xFF1C1C1E),
-              title: Text(
-                widget.allMovieData['name'],
-                style: const TextStyle(color: Colors.white),
+            return Scaffold(
+              appBar: AppBar(
+                backgroundColor: const Color(0xFF1C1C1E),
+                title: Text(
+                  widget.allMovieData['name'],
+                  style: const TextStyle(color: Colors.white),
+                ),
+                iconTheme: const IconThemeData(color: Colors.white),
               ),
-              iconTheme: const IconThemeData(color: Colors.white),
+              backgroundColor: const Color(0xFF121212),
+              body: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.network(
+                        posterUrl,
+                        height: 360,
+                        width: 240,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    Chip(
+                      label: Text(
+                        watched ? 'Watched' : 'Not Watched',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      backgroundColor: watched
+                          ? Colors.green.shade600
+                          : Colors.grey.shade700,
+                    ),
+                    const SizedBox(height: 12),
+
+                    Text(
+                      widget.allMovieData['name'],
+                      style: const TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 10),
+
+                    Text(
+                      widget.allMovieData['description'],
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: Colors.white70,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+
+                    const SizedBox(height: 20),
+                    Divider(color: Colors.white24),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.person_4,
+                            size: 16, color: Colors.grey),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Director: ${widget.allMovieData['directorName'] ?? 'N/A'}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontStyle: FontStyle.italic,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 10),
+                    Text(
+                      userRating != null
+                          ? 'User Rating: $userRating'
+                          : 'User Rating: N/A',
+                      style: const TextStyle(color: Colors.white70),
+                    ),
+                    Text(
+                      userReview != null
+                          ? 'User Review: $userReview'
+                          : 'User Review: N/A',
+                      style: const TextStyle(color: Colors.white70),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        Chip(
+                          label: Text(
+                              'IMDB: ${widget.allMovieData['imdbrating']}'),
+                          backgroundColor: Colors.deepOrange.shade200,
+                        ),
+                        Chip(
+                          label: Text(widget.allMovieData['category']),
+                          backgroundColor: Colors.blueAccent.shade100,
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 14),
+                    buildTagChips(widget.allMovieData['tags']),
+
+                    const SizedBox(height: 20),
+                    Divider(color: Colors.white24),
+
+                    FutureBuilder<List<int>>(
+                      future: fetchMovieStats(movieId, userId),
+                      builder: (context, statSnapshot) {
+                        if (statSnapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const CircularProgressIndicator();
+                        } else if (statSnapshot.hasError) {
+                          return const Text('Failed to load stats',
+                              style: TextStyle(color: Colors.red));
+                        } else if (!statSnapshot.hasData ||
+                            statSnapshot.data!.length != 3) {
+                          return const Text('No stats available');
+                        }
+                        return buildStatsRow(statSnapshot.data!);
+                      },
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.calendar_today,
+                            size: 14, color: Colors.grey),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Released: ${formatCreatedTime(widget.allMovieData['releaseDate'] ?? 'N/A')}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    /// Buttons
+                    Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            buildActionButton(
+                              onPressed: () => addToFavorites(context),
+                              icon: Icons.favorite,
+                              label: 'Favorite',
+                              color: Colors.redAccent,
+                            ),
+                            buildActionButton(
+                              onPressed: () => addToWatchlist(context),
+                              icon: Icons.list,
+                              label: 'Watchlist',
+                              color: Colors.teal,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            buildActionButton(
+                              onPressed: () => toggleWatched(context),
+                              icon: watched
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              label: watched
+                                  ? 'Unmark Watched'
+                                  : 'Mark as Watched',
+                              color: Colors.orange,
+                            ),
+                            buildActionButton(
+                              onPressed: () {
+                                showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  shape: const RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.vertical(
+                                        top: Radius.circular(20)),
+                                  ),
+                                  builder: (context) =>
+                                      reviewBottomSheetContent(context),
+                                );
+                              },
+                              icon: Icons.rate_review,
+                              label: userReview != null
+                                  ? 'Edit Review'
+                                  : 'Write Review',
+                              color: Colors.indigoAccent,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 30),
+                    const Text('Movies with Similar Poster Vibe',
+                        style: TextStyle(color: Colors.white70)),
+                    Rec(context, newMovieData),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+Widget Rec(BuildContext context, List<Map<String, dynamic>> newMovieData) {
+  return Padding(
+    padding: const EdgeInsets.all(16.0),
+    child: SizedBox(
+      height: 200, // controls the height of the row
+      width: double.infinity,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        itemCount: newMovieData.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 15),
+        itemBuilder: (context, index) {
+          final rd = newMovieData[index];
+          return Container(
+            height: 200,
+            width: 120,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: Colors.transparent,
             ),
-            backgroundColor: const Color(0xFF121212),
-            body: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Image.network(
-                      posterUrl,
-                      height: 360,
-                      width: 240,
-                      fit: BoxFit.cover,
-                    ),
+            child: InkWell(
+              onTap: () {
+                addlogfx(rd['id']);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MovieDetails(allMovieData: rd),
                   ),
-                  const SizedBox(height: 20),
-
-                  Chip(
-                    label: Text(
-                      watched ? 'Watched' : 'Not Watched',
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    backgroundColor:
-                        watched ? Colors.green.shade600 : Colors.grey.shade700,
-                  ),
-                  const SizedBox(height: 12),
-
-                  Text(
-                    widget.allMovieData['name'],
-                    style: const TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 10),
-
-                  Text(
-                    widget.allMovieData['description'],
-                    style: const TextStyle(
-                      fontSize: 15,
-                      color: Colors.white70,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-
-                  const SizedBox(height: 20),
-                  Divider(color: Colors.white24),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.person_4, size: 16, color: Colors.grey),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Director: ${widget.allMovieData['directorName'] ?? 'N/A'}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontStyle: FontStyle.italic,
-                          color: Colors.grey,
-                        ),
+                );
+              },
+              child: FutureBuilder<String>(
+                future: fetchPoster(rd['name']),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+                  } else if (snapshot.hasError || !snapshot.hasData) {
+                    return const Icon(Icons.broken_image);
+                  } else {
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.network(
+                        snapshot.data!,
+                        fit: BoxFit.cover,
                       ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 10),
-                  Text(
-                    userRating != null
-                        ? 'User Rating: $userRating'
-                        : 'User Rating: N/A',
-                    style: const TextStyle(color: Colors.white70),
-                  ),
-                  Text(
-                    userReview != null
-                        ? 'User Review: $userReview'
-                        : 'User Review: N/A',
-                    style: const TextStyle(color: Colors.white70),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      Chip(
-                        label: Text('IMDB: ${widget.allMovieData['imdbrating']}'),
-                        backgroundColor: Colors.deepOrange.shade200,
-                      ),
-                      Chip(
-                        label: Text(widget.allMovieData['category']),
-                        backgroundColor: Colors.blueAccent.shade100,
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 14),
-                  buildTagChips(widget.allMovieData['tags']),
-
-                  const SizedBox(height: 20),
-                  Divider(color: Colors.white24),
-
-                  FutureBuilder<List<int>>(
-                    future: fetchMovieStats(movieId, userId),
-                    builder: (context, statSnapshot) {
-                      if (statSnapshot.connectionState ==
-                          ConnectionState.waiting) {
-                        return const CircularProgressIndicator();
-                      } else if (statSnapshot.hasError) {
-                        return const Text('Failed to load stats',
-                            style: TextStyle(color: Colors.red));
-                      } else if (!statSnapshot.hasData ||
-                          statSnapshot.data!.length != 3) {
-                        return const Text('No stats available');
-                      }
-                      return buildStatsRow(statSnapshot.data!);
-                    },
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Released: ${formatCreatedTime(widget.allMovieData['releaseDate'] ?? 'N/A')}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontStyle: FontStyle.italic,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  /// Buttons
-                  Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          buildActionButton(
-                            onPressed: () => addToFavorites(context),
-                            icon: Icons.favorite,
-                            label: 'Favorite',
-                            color: Colors.redAccent,
-                          ),
-                          buildActionButton(
-                            onPressed: () => addToWatchlist(context),
-                            icon: Icons.list,
-                            label: 'Watchlist',
-                            color: Colors.teal,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          buildActionButton(
-                            onPressed: () => toggleWatched(context),
-                            icon: watched ? Icons.visibility_off : Icons.visibility,
-                            label:
-                                watched ? 'Unmark Watched' : 'Mark as Watched',
-                            color: Colors.orange,
-                          ),
-                          buildActionButton(
-                            onPressed: () {
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                shape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.vertical(
-                                      top: Radius.circular(20)),
-                                ),
-                                builder: (context) =>
-                                    reviewBottomSheetContent(context),
-                              );
-                            },
-                            icon: Icons.rate_review,
-                            label: userReview != null
-                                ? 'Edit Review'
-                                : 'Write Review',
-                            color: Colors.indigoAccent,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 30),
-                ],
+                    );
+                  }
+                },
               ),
             ),
           );
         },
-      );
-    },
-  );
-}
-
-Widget buildActionButton({
-  required VoidCallback onPressed,
-  required IconData icon,
-  required String label,
-  required Color color,
-}) {
-  return ElevatedButton.icon(
-    onPressed: onPressed,
-    icon: Icon(icon, color: Colors.white),
-    label: Text(label, style: const TextStyle(color: Colors.white)),
-    style: ElevatedButton.styleFrom(
-      backgroundColor: color,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
     ),
   );
 }
 
+
+  Widget buildActionButton({
+    required VoidCallback onPressed,
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, color: Colors.white),
+      label: Text(label, style: const TextStyle(color: Colors.white)),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
 
   Future<void> addToFavorites(BuildContext context) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();

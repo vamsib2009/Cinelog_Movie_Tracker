@@ -7,6 +7,10 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.Array;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
@@ -59,5 +63,21 @@ public class Movie {
     )
     @Column(name = "tag")
     private List<String> tags = new ArrayList<>();
+
+
+    //Column to store the embeddings
+    @Setter
+    @Column(name="plot_embedding")
+    @JdbcTypeCode(SqlTypes.VECTOR)
+    @Array(length=512)
+    public float[] plotEmbedding;
+
+    @Setter
+    @Column(name="poster_embedding")
+    @JdbcTypeCode(SqlTypes.VECTOR)
+    @Array(length=512)
+    public float[] posterEmbedding;
+
+
 
 }

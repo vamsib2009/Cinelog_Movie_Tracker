@@ -2,29 +2,14 @@ package com.example.SpringEcom.config;
 
 import com.example.SpringEcom.model.Category;
 import com.example.SpringEcom.model.Movie;
-import com.example.SpringEcom.model.PlotEmbeddings;
-import com.example.SpringEcom.model.PosterEmbeddings;
 import com.example.SpringEcom.repo.MovieRepo;
-import com.example.SpringEcom.repo.PlotEmbeddingRepo;
-import com.example.SpringEcom.repo.PosterEmbeddingRepo;
-import com.pgvector.PGvector;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
-import org.springframework.ai.content.Media;
-import org.springframework.ai.document.Document;
-import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
-import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Types;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -33,27 +18,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.stereotype.Service;
 
-import javax.sql.DataSource;
-
 
 @Service
 public class MovieInitializer {
 
     private final MovieRepo movieRepository;
-    private final DataSource dataSource;
-    private final VectorStore vectorStore;
-    private final PosterEmbeddingRepo posterRepo;
-    private final PlotEmbeddingRepo plotRepo;
 
     private final List<Integer> insertedIds = new ArrayList<>();
 
     @Autowired
-    public MovieInitializer(MovieRepo movieRepository, DataSource dataSource, VectorStore vectorStore, PosterEmbeddingRepo posterRepo, PlotEmbeddingRepo plotRepo) {
+    public MovieInitializer(MovieRepo movieRepository) {
         this.movieRepository = movieRepository;
-        this.dataSource = dataSource;
-        this.vectorStore = vectorStore;
-        this.posterRepo = posterRepo;
-        this.plotRepo = plotRepo;
     }
 
     @Value("classpath:movies.jsonl")
@@ -125,30 +100,19 @@ public class MovieInitializer {
                     //Temporatily save as dummy
                     movie.setTags(Arrays.asList("dummy","dummy"));
 
-                    Movie savedMovie = movieRepository.save(movie);
-
-                    //Process Poster Embeddings
-                    PosterEmbeddings posterEmbeddings = new PosterEmbeddings();
-
                     float[] embeddingArray = new float[512];
                     for (int i = 0; i < embeddingArray.length; i++) {
                         embeddingArray[i] = Float.parseFloat(json.get("poster_embedding").get(i).asText());
                     }
-                    posterEmbeddings.setEmbedding(embeddingArray);
-                    posterEmbeddings.setMovie(savedMovie);
-                    posterRepo.save(posterEmbeddings);
-
-                    //Process Plot Embeddings
-                    PlotEmbeddings plotEmbeddings = new PlotEmbeddings();
+                    movie.setPosterEmbedding(embeddingArray);
 
                     float[] plotEmbeddingArray = new float[512];
                     for (int i = 0; i < plotEmbeddingArray.length; i++) {
                         plotEmbeddingArray[i] = Float.parseFloat(json.get("plot_embedding").get(i).asText());
                     }
-                    plotEmbeddings.setEmbedding(plotEmbeddingArray);
-                    plotEmbeddings.setMovie(savedMovie);
-                    plotRepo.save(plotEmbeddings);
+                    movie.setPlotEmbedding(plotEmbeddingArray);
 
+                    Movie savedMovie = movieRepository.save(movie);
 
 
 
