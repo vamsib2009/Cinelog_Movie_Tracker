@@ -5,10 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:ui';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
-
-
+// import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class MovieCard extends StatefulWidget {
   final Map<String, dynamic> allMovieData;
@@ -20,16 +17,15 @@ class MovieCard extends StatefulWidget {
 }
 
 class _MovieCardState extends State<MovieCard> {
+  bool watched = false;
 
-    bool watched = false;
+  @override
+  void initState() {
+    getWatched(context);
+    super.initState();
+  }
 
-    @override
-      void initState(){
-      getWatched(context);
-      super.initState();
-    }
-
-    Future<void> getWatched(context) async {
+  Future<void> getWatched(context) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int? userId = prefs.getInt('userId');
 
@@ -56,7 +52,6 @@ class _MovieCardState extends State<MovieCard> {
       print('Failed to fetch watched data: $e');
     }
   }
-
 
   Future<String> fetchPoster(String title) async {
     //dotenv.load(fileName: ".env");
@@ -147,8 +142,8 @@ class _MovieCardState extends State<MovieCard> {
                 children: [
                   // Poster
                   ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(20)),
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(20)),
                     child: Stack(
                       children: [
                         Image.network(
@@ -179,10 +174,12 @@ class _MovieCardState extends State<MovieCard> {
                           top: 8,
                           right: 8,
                           child: _buildGlassBadge(
-                            color: getScoreColor(widget.allMovieData['imdbrating'])
-                                .withOpacity(0.75),
+                            color:
+                                getScoreColor(widget.allMovieData['imdbrating'])
+                                    .withOpacity(0.75),
                             icon: Icons.star,
-                            text: '${widget.allMovieData['imdbrating'] ?? 'N/A'}',
+                            text:
+                                '${widget.allMovieData['imdbrating'] ?? 'N/A'}',
                           ),
                         ),
                         // Category
@@ -190,9 +187,11 @@ class _MovieCardState extends State<MovieCard> {
                           bottom: 8,
                           left: 8,
                           child: _buildGlassBadge(
-                            color: getCategoryColor(widget.allMovieData['category'])
+                            color: getCategoryColor(
+                                    widget.allMovieData['category'])
                                 .withOpacity(0.65),
-                            icon: getCategoryIcon(widget.allMovieData['category']),
+                            icon: getCategoryIcon(
+                                widget.allMovieData['category']),
                             text: widget.allMovieData['category'] ?? '',
                           ),
                         ),
@@ -203,8 +202,8 @@ class _MovieCardState extends State<MovieCard> {
                   // Details
                   Expanded(
                     child: Padding(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 8),
                       child: Stack(
                         children: [
                           Column(
@@ -294,38 +293,36 @@ class _MovieCardState extends State<MovieCard> {
   }
 
   Widget buildWatchedIndicator(bool watched) {
-  return InkWell(
-    splashColor: Colors.transparent,
-    child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      decoration: BoxDecoration(
-        color: watched ? Colors.green : Colors.grey.shade500,
-        borderRadius: BorderRadius.circular(20),
+    return InkWell(
+      splashColor: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        decoration: BoxDecoration(
+          color: watched ? Colors.green : Colors.grey.shade500,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              watched ? Icons.check_circle : Icons.hourglass_empty,
+              color: Colors.white,
+              size: 16,
+            ),
+            // const SizedBox(width: 4),
+            // Text(
+            //   watched ? "Watched" : "Not Watched",
+            //   style: const TextStyle(
+            //     color: Colors.white,
+            //     fontSize: 12,
+            //     fontWeight: FontWeight.w500,
+            //   ),
+            // ),
+          ],
+        ),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            watched ? Icons.check_circle : Icons.hourglass_empty,
-            color: Colors.white,
-            size: 16,
-          ),
-          // const SizedBox(width: 4),
-          // Text(
-          //   watched ? "Watched" : "Not Watched",
-          //   style: const TextStyle(
-          //     color: Colors.white,
-          //     fontSize: 12,
-          //     fontWeight: FontWeight.w500,
-          //   ),
-          // ),
-        ],
-      ),
-    ),
-  );
-}
-
-
+    );
+  }
 }
 
 //Function to get Color vased on enum
