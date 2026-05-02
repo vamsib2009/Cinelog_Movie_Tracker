@@ -71,9 +71,8 @@ public class MovieService {
     public List<Movie> findSimilarMoviesByPoster(Integer movieId)
     {
         Movie movie = movieRepo.findById(movieId).orElse(null);
-        float[] posterembed = movie.getPosterEmbedding();
 
-        return movieRepo.searchByPosterEmbedding(posterembed, movieId, 5);
+        return movieRepo.searchByPosterEmbedding( movieId, 5);
 
     }
 }

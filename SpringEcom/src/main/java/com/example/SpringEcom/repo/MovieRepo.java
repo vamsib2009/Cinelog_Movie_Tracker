@@ -47,13 +47,15 @@ public interface MovieRepo extends JpaRepository<Movie, Integer> {
 
     //Cosine Similarity
     @Query(value = """
-    SELECT * FROM movie
-    WHERE id != :movieId
-    ORDER BY poster_embedding <-> CAST(:embedding AS vector)
+    SELECT * FROM movie m  -- Outer query uses alias 'm'
+    WHERE m.id != :movieId
+    ORDER BY m.poster_embedding <-> (
+        -- This is the subquery
+        SELECT sub.poster_embedding FROM movie sub WHERE sub.id = :movieId
+    )
     LIMIT :limit
     """, nativeQuery = true)
     List<Movie> searchByPosterEmbedding(
-            @Param("embedding") float[] embedding,
             @Param("movieId") Integer movieId,
             @Param("limit") int limit
     );
