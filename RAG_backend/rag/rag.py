@@ -48,6 +48,13 @@ def _embed_query(query: str) -> list[float]:
     return resp.data[0].embedding
 
 
+def _retrieval_text(query: str, history: list[ChatTurn] | None) -> str:
+    # Follow-ups like "another one like that" lose all signal on their own.
+    # Prepend recent user turns so retrieval inherits the conversation's topic.
+    prior = " ".join(h.content for h in (history or []) if h.role == "user")
+    return f"{prior} {query}".strip() if prior else query
+
+
 def _format_for_prompt(m: dict) -> str:
     bits = [f"[id={m['id']}] {m['name']}"]
     if m.get("director_name"):
@@ -88,7 +95,7 @@ def run_rag(
     max_suggestions: int,
     history: list[ChatTurn] | None = None,
 ) -> RagResponse:
-    qvec = _embed_query(query)
+    qvec = _embed_query(_retrieval_text(query, history))
     candidates = search_movies(qvec, RETRIEVAL_K)
 
     context = "\n".join(_format_for_prompt(m) for m in candidates)
@@ -167,7 +174,7 @@ def stream_rag(
     history: list[ChatTurn] | None = None,
 ) -> Iterator[str]:
     """Yields SSE-formatted strings: text deltas, then a final 'done' event with movies."""
-    qvec = _embed_query(query)
+    qvec = _embed_query(_retrieval_text(query, history))
     candidates = search_movies(qvec, RETRIEVAL_K)
 
     context = "\n".join(_format_for_prompt(m) for m in candidates)
