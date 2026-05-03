@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:moblie_flutter_app/movie_card.dart';
 import 'package:moblie_flutter_app/movie_details.dart';
+import 'package:moblie_flutter_app/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -52,7 +53,7 @@ Future<void> fetchMovies() async {
     _isLoading = true;
   });
 
-  final fetchMovieUrl = Uri.parse('http://10.0.2.2:8080/api/movies?page=$_currentPage&size=15');
+  final fetchMovieUrl = Uri.parse('http://$apiHost/api/movies?page=$_currentPage&size=15');
   try {
     final response = await http.get(fetchMovieUrl);
     if (response.statusCode == 200) {
@@ -90,7 +91,7 @@ Future<void> fetchMovies() async {
 
   Future<void> fetchSearchedMovies(String keyword) async {
     final fetchMovieUrl =
-        Uri.parse('http://10.0.2.2:8080/api/search?keyword=$keyword');
+        Uri.parse('http://$apiHost/api/search?keyword=$keyword');
     try {
       final response = await http.get(fetchMovieUrl);
 
@@ -226,7 +227,7 @@ Future<void> addlogfx(var movieId) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   int? userId = prefs.getInt('userId');
 
-  final loggingendpoint = Uri.http('10.0.2.2:8080', 'logging/add', {
+  final loggingendpoint = Uri.http(apiHost, 'logging/add', {
     'userId': userId.toString(),
     'movieId': movieId.toString(),
   });

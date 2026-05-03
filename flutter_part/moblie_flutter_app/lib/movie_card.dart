@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:moblie_flutter_app/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:ui';
 // import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -31,7 +32,7 @@ class _MovieCardState extends State<MovieCard> {
 
     int movieId = int.tryParse(widget.allMovieData['id'].toString()) ?? 0;
 
-    final uri = Uri.http('10.0.2.2:8080', 'watched/getwatched', {
+    final uri = Uri.http(apiHost, 'watched/getwatched', {
       'movieId': movieId.toString(),
       'userId': userId.toString(),
     });

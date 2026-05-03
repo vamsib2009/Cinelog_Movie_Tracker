@@ -4,6 +4,7 @@ import 'package:moblie_flutter_app/my_home_page.dart';
 import 'package:moblie_flutter_app/other_screens/favorites.dart';
 import 'package:moblie_flutter_app/other_screens/trending.dart';
 import 'package:moblie_flutter_app/other_screens/watchlist.dart';
+import 'package:moblie_flutter_app/rag_chat_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/cupertino.dart';
 import 'dart:ui';
@@ -34,8 +35,10 @@ class _RewrittenHomePageState extends State<RewrittenHomePage> {
         return Watchlist();
       case 4:
         return Favorite();
+      case 5:
+        return const RagChatPage();
       default:
-        return MyHomePage(title: 'All Movies');
+        return const RagChatPage();
     }
   }
 
@@ -58,13 +61,13 @@ class _RewrittenHomePageState extends State<RewrittenHomePage> {
                 builder: (context) => IconButton(
                   icon: const Icon(Icons.menu),
                   color: Colors.greenAccent.shade400,
-                    iconSize: 28,
+                  iconSize: 28,
                   onPressed: () => Scaffold.of(context).openDrawer(),
                   splashRadius: 24,
                 ),
               ),
               title: Padding(
-                padding: const EdgeInsets.only(top:8.0),
+                padding: const EdgeInsets.only(top: 8.0),
                 child: Text(
                   title,
                   style: GoogleFonts.bebasNeue(
@@ -114,6 +117,7 @@ class _RewrittenHomePageState extends State<RewrittenHomePage> {
     'Trending This Week!',
     'Watchlist',
     'MY Favorites',
+    'Ask Cinelog',
   ];
   Widget buildSideDrawer(BuildContext context) {
     return Drawer(
@@ -179,140 +183,144 @@ class _RewrittenHomePageState extends State<RewrittenHomePage> {
       ),
     );
   }
-Widget bottomModalSheet(BuildContext context) {
-  return DraggableScrollableSheet(
-    initialChildSize: 0.13,
-    minChildSize: 0.13,
-    maxChildSize: 0.8,
-    builder: (context, scrollController) {
-      return ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.white.withOpacity(0.2),
-                  Colors.white.withOpacity(0.05),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+
+  Widget bottomModalSheet(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.13,
+      minChildSize: 0.13,
+      maxChildSize: 0.8,
+      builder: (context, scrollController) {
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.white.withOpacity(0.2),
+                    Colors.white.withOpacity(0.05),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(25)),
+                border: Border.all(color: Colors.white.withOpacity(0.2)),
               ),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
-              border: Border.all(color: Colors.white.withOpacity(0.2)),
-            ),
-            child: SingleChildScrollView(
-              controller: scrollController,
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                children: [
-                  // ⬇️ Grab handle
-                  Container(
-                    width: 50,
-                    height: 5,
-                    margin: const EdgeInsets.only(bottom: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(10),
+              child: SingleChildScrollView(
+                controller: scrollController,
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  children: [
+                    // ⬇️ Grab handle
+                    Container(
+                      width: 50,
+                      height: 5,
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
-                  ),
 
-                  buildIconElements(),
-                  const SizedBox(height: 20),
+                    buildIconElements(),
+                    const SizedBox(height: 20),
 
-                  // Add your custom content here
-                  Text(
-                    'Explore More Content',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.green.shade900,
+                    // Add your custom content here
+                    Text(
+                      'Explore More Content',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.green.shade900,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 300),
-                  const Text('Even more...'),
-                  const SizedBox(height: 300),
-                ],
+                    const SizedBox(height: 300),
+                    const Text('Even more...'),
+                    const SizedBox(height: 300),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      );
-    },
-  );
-}
+        );
+      },
+    );
+  }
 
   Widget buildIconElements() {
-  return Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-    decoration: BoxDecoration(
-      color: Colors.white.withOpacity(0.15),
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        _buildNavItem(CupertinoIcons.house_fill, 'Home', 1),
-        _buildNavItem(CupertinoIcons.flame_fill, 'Trending', 2),
-        _buildNavItem(CupertinoIcons.square_list_fill, 'Watchlist', 3),
-        _buildNavItem(CupertinoIcons.heart_fill, 'Favorites', 4),
-      ],
-    ),
-  );
-}
-
-
-Widget _buildNavItem(IconData icon, String label, int index) {
-  final bool isSelected = _selectedPage == index;
-
-  return GestureDetector(
-    onTap: () {
-      setState(() {
-        _selectedPage = index;
-      });
-    },
-    child: AnimatedContainer(
-      duration: const Duration(milliseconds: 50),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: isSelected
-            ? const Color(0xFFC8E6C9).withOpacity(0.25) // softer than 0xFFE8F5E9
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: isSelected
-            ? [
-                BoxShadow(
-                  color: const Color(0xFF2E7D32)
-                      .withOpacity(0.25), // shadow like dark green
-                  blurRadius: 10,
-                  spreadRadius: 1,
-                  offset: const Offset(0, 3),
-                ),
-              ]
-            : [],
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(20),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          Icon(
-            icon,
-            size: 26,
-            color: isSelected ? const Color(0xFF1B5E20) : Colors.grey.shade500,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color:
-                  isSelected ? const Color(0xFF004D40) : Colors.grey.shade500,
-            ),
-          ),
+          _buildNavItem(CupertinoIcons.house_fill, 'Home', 1),
+          _buildNavItem(CupertinoIcons.flame_fill, 'Trending', 2),
+          _buildNavItem(CupertinoIcons.square_list_fill, 'Watchlist', 3),
+          _buildNavItem(CupertinoIcons.heart_fill, 'Favorites', 4),
+          _buildNavItem(CupertinoIcons.sparkles, 'Ask', 5),
         ],
       ),
-    ),
-  );
-}
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, String label, int index) {
+    final bool isSelected = _selectedPage == index;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedPage = index;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 50),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? const Color(0xFFC8E6C9)
+                  .withOpacity(0.25) // softer than 0xFFE8F5E9
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF2E7D32)
+                        .withOpacity(0.25), // shadow like dark green
+                    blurRadius: 10,
+                    spreadRadius: 1,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
+              : [],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 26,
+              color:
+                  isSelected ? const Color(0xFF1B5E20) : Colors.grey.shade500,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color:
+                    isSelected ? const Color(0xFF004D40) : Colors.grey.shade500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

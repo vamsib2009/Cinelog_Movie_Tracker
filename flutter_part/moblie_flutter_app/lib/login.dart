@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:moblie_flutter_app/rewritten_home_page.dart';
+import 'package:moblie_flutter_app/api_config.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -103,7 +104,7 @@ Widget containedTFF(var xController, String text, Icon icon) {
 }
 
 Future<bool> loginfx(String username, String password) async {
-  final loginendpoint = Uri.http('10.0.2.2:8080', '/auth/login', {
+  final loginendpoint = Uri.http(apiHost, '/auth/login', {
     'username': username,
     'password': password,
   });

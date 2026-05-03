@@ -78,6 +78,13 @@ public class Movie {
     @Array(length=512)
     public float[] posterEmbedding;
 
+    @Setter
+    @Column(name="rag_embedding")
+    @JdbcTypeCode(SqlTypes.VECTOR)
+    @Array(length=1536)
+    public float[] ragEmbedding;
+
+
 
 
 }

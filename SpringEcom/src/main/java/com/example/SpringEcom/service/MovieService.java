@@ -72,7 +72,7 @@ public class MovieService {
     {
         Movie movie = movieRepo.findById(movieId).orElse(null);
 
-        return movieRepo.searchByPosterEmbedding( movieId, 5);
+        return movieRepo.searchByPosterEmbedding( movieId, 10);
 
     }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:moblie_flutter_app/movie_card.dart';
 import 'package:moblie_flutter_app/movie_details.dart';
+import 'package:moblie_flutter_app/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Favorite extends StatefulWidget {
@@ -27,7 +28,7 @@ class _FavoritePageState extends State<Favorite> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int? userId = prefs.getInt('userId');
 
-    final fetchMovieUrl = Uri.http('10.0.2.2:8080', 'favorites/get', {
+    final fetchMovieUrl = Uri.http(apiHost, 'favorites/get', {
       'userId': userId.toString(),
     });
     try {
@@ -64,7 +65,7 @@ class _FavoritePageState extends State<Favorite> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int? userId = prefs.getInt('userId');
 
-    final fetchMovieUrl = Uri.http('10.0.2.2:8080', 'favorites/delete',
+    final fetchMovieUrl = Uri.http(apiHost, 'favorites/delete',
         {'userId': userId.toString(), 'movieId': movieId.toString()});
     try {
       final response = await http.post(fetchMovieUrl);
@@ -175,7 +176,7 @@ Future<void> addlogfx(var movieId) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   int? userId = prefs.getInt('userId');
 
-  final loggingendpoint = Uri.http('10.0.2.2:8080', 'logging/add', {
+  final loggingendpoint = Uri.http(apiHost, 'logging/add', {
     'userId': userId.toString(),
     'movieId': movieId.toString(),
   });

@@ -1,12 +1,39 @@
-__pycache__/
-Cinelog_Scrapers/clip-ai-env/
-.env
-Streamlit_files/__pycache__/
-flutter_part/mobile_flutter_app/android
-flutter_part/mobile_flutter_app/ios
-flutter_part/mobile_flutter_app/build
-flutter_part/mobile_flutter_app/windows
-flutter_part/mobile_flutter_app/linux
+# OS junk
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE/editor
 .idea/
-flutter_part/moblie_flutter_app/android/app/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Secrets / local env
+.env
+*.env
+
+# Python
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
 venv/
+.venv/
+
+# Maven/Java build output
+target/
+**/target/
+
+# Flutter build output (repo has `flutter_part/moblie_flutter_app/`)
+flutter_part/moblie_flutter_app/.dart_tool/
+flutter_part/moblie_flutter_app/build/
+
+# Project-specific: keep SpringEcom resources out of VCS
+SpringEcom/src/main/resources/
+
+# Project-specific: local virtualenv / caches
+Cinelog_Scrapers/clip-ai-env/
+Streamlit_Files/__pycache__/

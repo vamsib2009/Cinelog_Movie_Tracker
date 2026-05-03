@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:moblie_flutter_app/movie_card.dart';
 import 'package:moblie_flutter_app/movie_details.dart';
+import 'package:moblie_flutter_app/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Trending extends StatefulWidget {
@@ -24,7 +25,7 @@ class _TrendingPageState extends State<Trending> {
   }
 
   Future<void> fetchTrendingMovies() async {
-    final fetchMovieUrl = Uri.parse('http://10.0.2.2:8080/api/trending');
+    final fetchMovieUrl = Uri.parse('http://$apiHost/api/trending');
     try {
       final response = await http.get(fetchMovieUrl);
 
@@ -112,7 +113,7 @@ Future<void> addlogfx(var movieId) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   int? userId = prefs.getInt('userId');
 
-  final loggingendpoint = Uri.http('10.0.2.2:8080', 'logging/add', {
+  final loggingendpoint = Uri.http(apiHost, 'logging/add', {
     'userId': userId.toString(),
     'movieId': movieId.toString(),
   });

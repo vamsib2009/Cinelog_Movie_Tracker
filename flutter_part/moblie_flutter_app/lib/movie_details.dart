@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:moblie_flutter_app/my_home_page.dart';
+import 'package:moblie_flutter_app/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MovieDetails extends StatefulWidget {
@@ -54,7 +55,7 @@ class _MovieDetailsState extends State<MovieDetails> {
 
   Future<List<int>> fetchMovieStats(int movieId, int userId) async {
     final url = Uri.http(
-      '10.0.2.2:8080',
+      apiHost,
       '/logging/get',
       {
         'movieId': movieId.toString(),
@@ -108,8 +109,8 @@ class _MovieDetailsState extends State<MovieDetails> {
   }
 
   Future<void> fetchRecommendedMovies(String movieId) async {
-    final fetchMovieUrl = Uri.parse(
-        'http://10.0.2.2:8080/api/similarmoviesbyposter?movieId=$movieId');
+    final fetchMovieUrl =
+        Uri.parse('http://$apiHost/api/similarmoviesbyposter?movieId=$movieId');
     try {
       final response = await http.get(fetchMovieUrl);
 
@@ -391,62 +392,62 @@ class _MovieDetailsState extends State<MovieDetails> {
     );
   }
 
-Widget Rec(BuildContext context, List<Map<String, dynamic>> newMovieData) {
-  return Padding(
-    padding: const EdgeInsets.all(16.0),
-    child: SizedBox(
-      height: 200, // controls the height of the row
-      width: double.infinity,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        itemCount: newMovieData.length,
-        separatorBuilder: (context, index) => const SizedBox(width: 15),
-        itemBuilder: (context, index) {
-          final rd = newMovieData[index];
-          return Container(
-            height: 200,
-            width: 120,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              color: Colors.transparent,
-            ),
-            child: InkWell(
-              onTap: () {
-                addlogfx(rd['id']);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => MovieDetails(allMovieData: rd),
-                  ),
-                );
-              },
-              child: FutureBuilder<String>(
-                future: fetchPoster(rd['name']),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator(strokeWidth: 2));
-                  } else if (snapshot.hasError || !snapshot.hasData) {
-                    return const Icon(Icons.broken_image);
-                  } else {
-                    return ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.network(
-                        snapshot.data!,
-                        fit: BoxFit.cover,
-                      ),
-                    );
-                  }
-                },
+  Widget Rec(BuildContext context, List<Map<String, dynamic>> newMovieData) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: SizedBox(
+        height: 200, // controls the height of the row
+        width: double.infinity,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          itemCount: newMovieData.length,
+          separatorBuilder: (context, index) => const SizedBox(width: 15),
+          itemBuilder: (context, index) {
+            final rd = newMovieData[index];
+            return Container(
+              height: 200,
+              width: 120,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color: Colors.transparent,
               ),
-            ),
-          );
-        },
+              child: InkWell(
+                onTap: () {
+                  addlogfx(rd['id']);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => MovieDetails(allMovieData: rd),
+                    ),
+                  );
+                },
+                child: FutureBuilder<String>(
+                  future: fetchPoster(rd['name']),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2));
+                    } else if (snapshot.hasError || !snapshot.hasData) {
+                      return const Icon(Icons.broken_image);
+                    } else {
+                      return ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.network(
+                          snapshot.data!,
+                          fit: BoxFit.cover,
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ),
+            );
+          },
+        ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 
   Widget buildActionButton({
     required VoidCallback onPressed,
@@ -472,7 +473,7 @@ Widget Rec(BuildContext context, List<Map<String, dynamic>> newMovieData) {
 
     int movieId = int.tryParse(widget.allMovieData['id'].toString()) ?? 0;
 
-    final addfavendpoint = Uri.http('10.0.2.2:8080', 'favorites/add', {
+    final addfavendpoint = Uri.http(apiHost, 'favorites/add', {
       'userId': userId.toString(),
       'movieId': movieId.toString(),
     });
@@ -494,7 +495,7 @@ Widget Rec(BuildContext context, List<Map<String, dynamic>> newMovieData) {
 
     int movieId = int.tryParse(widget.allMovieData['id'].toString()) ?? 0;
 
-    final uri = Uri.http('10.0.2.2:8080', 'watched/getwatched', {
+    final uri = Uri.http(apiHost, 'watched/getwatched', {
       'movieId': movieId.toString(),
       'userId': userId.toString(),
     });
@@ -524,7 +525,7 @@ Widget Rec(BuildContext context, List<Map<String, dynamic>> newMovieData) {
 
     int movieId = int.tryParse(widget.allMovieData['id'].toString()) ?? 0;
 
-    final addfavendpoint = Uri.http('10.0.2.2:8080', 'watched/toggle', {
+    final addfavendpoint = Uri.http(apiHost, 'watched/toggle', {
       'userId': userId.toString(),
       'movieId': movieId.toString(),
     });
@@ -546,7 +547,7 @@ Widget Rec(BuildContext context, List<Map<String, dynamic>> newMovieData) {
 
     int movieId = int.tryParse(widget.allMovieData['id'].toString()) ?? 0;
 
-    final addfavendpoint = Uri.http('10.0.2.2:8080', 'watchlist/add', {
+    final addfavendpoint = Uri.http(apiHost, 'watchlist/add', {
       'userId': userId.toString(),
       'movieId': movieId.toString(),
     });
@@ -576,7 +577,7 @@ Widget Rec(BuildContext context, List<Map<String, dynamic>> newMovieData) {
       "userReview": userReview,
     };
 
-    final url = Uri.parse("http://10.0.2.2:8080/watched/updaterating");
+    final url = Uri.parse("http://$apiHost/watched/updaterating");
 
     try {
       final response = await http.put(
