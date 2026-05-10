@@ -39,6 +39,7 @@ class _MovieCardState extends State<MovieCard> {
 
     try {
       final response = await http.get(uri);
+      if (!mounted) return;
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
@@ -117,8 +118,8 @@ class _MovieCardState extends State<MovieCard> {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
             child: Container(
-              height: 300,
-              width: 160,
+              // No fixed height/width - the card fills whatever the parent
+              // allocates. Sizes are decided by the grid in my_home_page.
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -141,67 +142,68 @@ class _MovieCardState extends State<MovieCard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Poster
-                  ClipRRect(
-                    borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(20)),
-                    child: Stack(
-                      children: [
-                        Image.network(
-                          posterUrl,
-                          height: 240,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Container(
-                              height: 240,
+                  // Poster - takes ~75% of card height via flex.
+                  Expanded(
+                    flex: 7,
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(20)),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Image.network(
+                            posterUrl,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Container(
+                                color: Colors.black12,
+                                alignment: Alignment.center,
+                                child: const CircularProgressIndicator(
+                                    strokeWidth: 1.5),
+                              );
+                            },
+                            errorBuilder: (_, __, ___) => Container(
                               color: Colors.black12,
                               alignment: Alignment.center,
-                              child: const CircularProgressIndicator(
-                                  strokeWidth: 1.5),
-                            );
-                          },
-                          errorBuilder: (_, __, ___) => Container(
-                            height: 240,
-                            color: Colors.black12,
-                            alignment: Alignment.center,
-                            child: const Icon(Icons.broken_image,
-                                color: Colors.white70, size: 30),
+                              child: const Icon(Icons.broken_image,
+                                  color: Colors.white70, size: 30),
+                            ),
                           ),
-                        ),
-                        // IMDb rating
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: _buildGlassBadge(
-                            color:
-                                getScoreColor(widget.allMovieData['imdbrating'])
-                                    .withOpacity(0.75),
-                            icon: Icons.star,
-                            text:
-                                '${widget.allMovieData['imdbrating'] ?? 'N/A'}',
+                          // IMDb rating
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: _buildGlassBadge(
+                              color: getScoreColor(
+                                      widget.allMovieData['imdbrating'])
+                                  .withOpacity(0.75),
+                              icon: Icons.star,
+                              text:
+                                  '${widget.allMovieData['imdbrating'] ?? 'N/A'}',
+                            ),
                           ),
-                        ),
-                        // Category
-                        Positioned(
-                          bottom: 8,
-                          left: 8,
-                          child: _buildGlassBadge(
-                            color: getCategoryColor(
-                                    widget.allMovieData['category'])
-                                .withOpacity(0.65),
-                            icon: getCategoryIcon(
-                                widget.allMovieData['category']),
-                            text: widget.allMovieData['category'] ?? '',
+                          // Category
+                          Positioned(
+                            bottom: 8,
+                            left: 8,
+                            child: _buildGlassBadge(
+                              color: getCategoryColor(
+                                      widget.allMovieData['category'])
+                                  .withOpacity(0.65),
+                              icon: getCategoryIcon(
+                                  widget.allMovieData['category']),
+                              text: widget.allMovieData['category'] ?? '',
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
 
-                  // Details
+                  // Details - remaining ~25% of card height.
                   Expanded(
+                    flex: 3,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 8),
@@ -209,6 +211,7 @@ class _MovieCardState extends State<MovieCard> {
                         children: [
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
                                 widget.allMovieData['name'] ?? 'Unknown',
@@ -221,17 +224,19 @@ class _MovieCardState extends State<MovieCard> {
                                 ),
                               ),
                               const SizedBox(height: 4),
-                              Text(
-                                widget.allMovieData['description'] ??
-                                    'No description available',
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 11,
-                                  color: Colors.white70,
+                              Flexible(
+                                child: Text(
+                                  widget.allMovieData['description'] ??
+                                      'No description available',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 11,
+                                    color: Colors.white70,
+                                  ),
                                 ),
                               ),
-                              const Spacer(),
+                              const SizedBox(height: 4),
                               Text(
                                 'Release: ${formatCreatedTime(widget.allMovieData['releaseDate'])}',
                                 style: GoogleFonts.montserrat(

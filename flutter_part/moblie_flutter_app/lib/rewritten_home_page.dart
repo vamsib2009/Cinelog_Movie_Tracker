@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:moblie_flutter_app/login.dart';
 import 'package:moblie_flutter_app/my_home_page.dart';
 import 'package:moblie_flutter_app/other_screens/favorites.dart';
 import 'package:moblie_flutter_app/other_screens/trending.dart';
@@ -18,15 +19,73 @@ class RewrittenHomePage extends StatefulWidget {
 
 class _RewrittenHomePageState extends State<RewrittenHomePage> {
   late int _selectedPage;
-  // Discover (index 2) is the only tab we cache. Once mounted, we keep it in
-  // the tree via Offstage so revisiting it doesn't refire /api/movies. All
-  // other tabs rebuild on every switch as before.
-  bool _discoverMounted = false;
+  // Tabs we cache. Once a cached tab is opened, it stays mounted via Offstage
+  // so revisiting it doesn't refire any fetches in initState. Ask (index 1)
+  // is intentionally not cached - it has no init fetch, and rebuilding is
+  // cheap. Discover/Trending/Watchlist/Favorites (2-5) all hit endpoints in
+  // initState, so they're worth keeping alive.
+  static const _cachedIndices = [2, 3, 4, 5];
+  final Set<int> _mountedCached = {};
 
   @override
   void initState() {
     super.initState();
     _selectedPage = 1;
+  }
+
+  Future<void> _handleLogout() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF132238),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: Colors.white.withOpacity(0.15)),
+        ),
+        title: Text(
+          'Sign out?',
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: Text(
+          'You will need to sign back in to use Cinelog.',
+          style: GoogleFonts.poppins(
+            color: Colors.white.withOpacity(0.7),
+            fontSize: 13,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Cancel',
+                style: GoogleFonts.poppins(color: Colors.white70)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('Sign out',
+                style: GoogleFonts.poppins(
+                    color: Colors.greenAccent.shade400,
+                    fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    if (!mounted) return;
+    // Replace the entire navigation stack with the login screen so the user
+    // can't back-navigate into the (now logged-out) home page, and so any
+    // cached tab state is fully torn down.
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginPage()),
+      (_) => false,
+    );
   }
 
   Widget _buildPageForIndex(int index) {
@@ -61,15 +120,17 @@ class _RewrittenHomePageState extends State<RewrittenHomePage> {
               backgroundColor: Colors.black.withOpacity(0.35),
               elevation: 20,
               centerTitle: true,
-              leading: Builder(
-                builder: (context) => IconButton(
-                  icon: const Icon(Icons.menu),
-                  color: Colors.greenAccent.shade400,
-                  iconSize: 28,
-                  onPressed: () => Scaffold.of(context).openDrawer(),
-                  splashRadius: 24,
-                ),
-              ),
+              // Drawer not finished yet - hamburger hidden until it ships.
+              // Re-enable along with the `drawer:` line on the Scaffold.
+              // leading: Builder(
+              //   builder: (context) => IconButton(
+              //     icon: const Icon(Icons.menu),
+              //     color: Colors.greenAccent.shade400,
+              //     iconSize: 28,
+              //     onPressed: () => Scaffold.of(context).openDrawer(),
+              //     splashRadius: 24,
+              //   ),
+              // ),
               title: Padding(
                 padding: const EdgeInsets.only(top: 8.0),
                 child: Text(
@@ -96,11 +157,8 @@ class _RewrittenHomePageState extends State<RewrittenHomePage> {
                     color: Colors.greenAccent.shade400,
                     iconSize: 28,
                     splashRadius: 24,
-                    onPressed: () async {
-                      final prefs = await SharedPreferences.getInstance();
-                      await prefs.clear();
-                      Navigator.pop(context);
-                    },
+                    tooltip: 'Sign out',
+                    onPressed: _handleLogout,
                   ),
                 ),
               ],
@@ -176,24 +234,32 @@ class _RewrittenHomePageState extends State<RewrittenHomePage> {
         backgroundColor: Color(0xFF0D1B2A) // Deep Navy
         , // Light grey
         appBar: buildBeautifulAppBar(_titles[_selectedPage], context),
-        drawer: buildSideDrawer(context), // 👈 Include this here
+        //drawer: buildSideDrawer(context),
 
         body: Stack(
+          // The children list keeps a STABLE NUMBER of slots in a fixed order
+          // so Flutter's position-based reconciliation preserves State across
+          // tab switches. Each cached tab has a permanent slot that flips
+          // between SizedBox.shrink (before first visit) and Offstage(page)
+          // (after first visit).
           children: [
-            // Non-Discover tabs render fresh each switch (original behavior).
-            if (_selectedPage != 2) _buildPageForIndex(_selectedPage),
-            // Discover stays mounted once visited; Offstage hides it without
-            // disposing its State, so the movie list and scroll position
-            // survive tab switches with no /api/movies refetch.
-            if (_discoverMounted)
-              Offstage(
-                offstage: _selectedPage != 2,
-                child: TickerMode(
-                  enabled: _selectedPage == 2,
-                  child: const MyHomePage(title: 'All Movies'),
-                ),
-              ),
-            bottomModalSheet(context), // Draggable sheet on top
+            // Slot 0: Ask. Always rebuilt fresh, only rendered when active.
+            _selectedPage == 1
+                ? _buildPageForIndex(1)
+                : const SizedBox.shrink(),
+            // Slots 1-4: Discover, Trending, Watchlist, Favorites.
+            for (final pageIdx in _cachedIndices)
+              _mountedCached.contains(pageIdx)
+                  ? Offstage(
+                      offstage: _selectedPage != pageIdx,
+                      child: TickerMode(
+                        enabled: _selectedPage == pageIdx,
+                        child: _buildPageForIndex(pageIdx),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            // Last slot: draggable sheet on top.
+            bottomModalSheet(context),
           ],
         ),
       ),
@@ -202,8 +268,11 @@ class _RewrittenHomePageState extends State<RewrittenHomePage> {
 
   Widget bottomModalSheet(BuildContext context) {
     return DraggableScrollableSheet(
-      initialChildSize: 0.13,
-      minChildSize: 0.13,
+      // 0.13 was tight on shorter devices (640px tall = 83px sheet) - the
+      // grab handle + nav row could overflow vertically. 0.15 gives ~10px
+      // breathing room everywhere without changing the visual much.
+      initialChildSize: 0.15,
+      minChildSize: 0.15,
       maxChildSize: 0.8,
       builder: (context, scrollController) {
         return ClipRRect(
@@ -288,54 +357,70 @@ class _RewrittenHomePageState extends State<RewrittenHomePage> {
   Widget _buildNavItem(IconData icon, String label, int index) {
     final bool isSelected = _selectedPage == index;
 
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedPage = index;
-          if (index == 2) _discoverMounted = true;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 50),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFFC8E6C9)
-                  .withOpacity(0.25) // softer than 0xFFE8F5E9
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: const Color(0xFF2E7D32)
-                        .withOpacity(0.25), // shadow like dark green
-                    blurRadius: 10,
-                    spreadRadius: 1,
-                    offset: const Offset(0, 3),
+    // Expanded gives each of the 5 items an equal slice of the row width so
+    // the Row can never overflow horizontally, regardless of device. Center
+    // keeps the selected highlight tight around its content (instead of
+    // stretching across the whole slot).
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedPage = index;
+            if (_cachedIndices.contains(index)) _mountedCached.add(index);
+          });
+        },
+        behavior: HitTestBehavior.opaque,
+        child: Center(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 50),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? const Color(0xFFC8E6C9)
+                      .withOpacity(0.25) // softer than 0xFFE8F5E9
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: const Color(0xFF2E7D32)
+                            .withOpacity(0.25), // shadow like dark green
+                        blurRadius: 10,
+                        spreadRadius: 1,
+                        offset: const Offset(0, 3),
+                      ),
+                    ]
+                  : [],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 24,
+                  color: isSelected
+                      ? const Color(0xFF1B5E20)
+                      : Colors.grey.shade500,
+                ),
+                const SizedBox(height: 4),
+                // FittedBox scales the label down if its slot can't fit "Watchlist"
+                // / "Favorites" at the chosen font size on very narrow devices.
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: isSelected
+                          ? const Color(0xFF004D40)
+                          : Colors.grey.shade500,
+                    ),
                   ),
-                ]
-              : [],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 26,
-              color:
-                  isSelected ? const Color(0xFF1B5E20) : Colors.grey.shade500,
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color:
-                    isSelected ? const Color(0xFF004D40) : Colors.grey.shade500,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

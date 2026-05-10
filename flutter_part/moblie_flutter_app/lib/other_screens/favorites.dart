@@ -17,6 +17,7 @@ class Favorite extends StatefulWidget {
 
 class _FavoritePageState extends State<Favorite> {
   List<Map<String, dynamic>> allMovieData = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -33,7 +34,7 @@ class _FavoritePageState extends State<Favorite> {
     });
     try {
       final response = await http.post(fetchMovieUrl);
-
+      if (!mounted) return;
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);
         setState(() {
@@ -58,6 +59,8 @@ class _FavoritePageState extends State<Favorite> {
       }
     } catch (e) {
       print('Error fetching movies: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -69,7 +72,7 @@ class _FavoritePageState extends State<Favorite> {
         {'userId': userId.toString(), 'movieId': movieId.toString()});
     try {
       final response = await http.post(fetchMovieUrl);
-
+      if (!mounted) return;
       if (response.statusCode == 200) {
         //List<dynamic> data = json.decode(response.body);
         ScaffoldMessenger.of(context)
@@ -104,6 +107,12 @@ class _FavoritePageState extends State<Favorite> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     SizedBox(height: 10),
+                    if (_isLoading && allMovieData.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 80),
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    else
                     Container(
                       width: double.infinity,
                       child: Wrap(

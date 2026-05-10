@@ -17,6 +17,7 @@ class Trending extends StatefulWidget {
 
 class _TrendingPageState extends State<Trending> {
   List<Map<String, dynamic>> allMovieData = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -28,7 +29,7 @@ class _TrendingPageState extends State<Trending> {
     final fetchMovieUrl = Uri.parse('http://$apiHost/api/trending');
     try {
       final response = await http.get(fetchMovieUrl);
-
+      if (!mounted) return;
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);
         setState(() {
@@ -47,13 +48,14 @@ class _TrendingPageState extends State<Trending> {
               'tags': List<String>.from(json['tags'] ?? []),
             };
           }).toList();
-          print(allMovieData[1]['name']);
         });
       } else {
         print('Failed to fetch movies. Status code: ${response.statusCode}');
       }
     } catch (e) {
       print('Error fetching movies: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -72,6 +74,12 @@ class _TrendingPageState extends State<Trending> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   SizedBox(height: 10),
+                  if (_isLoading && allMovieData.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 80),
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else
                   Wrap(
                     spacing: 20,
                     runSpacing: 20,

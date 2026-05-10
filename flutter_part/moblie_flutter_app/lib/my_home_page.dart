@@ -21,17 +21,35 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _hasMore = true;
   final ScrollController _scrollController = ScrollController();
 
-
+  // Search state. _activeSearch is the query currently applied to the list -
+  // empty means we're in paginated-browse mode. _searchVersion stamps each
+  // search request so a stale response can't overwrite a newer one (e.g. user
+  // submits "Inception", then quickly clears and submits "Tenet" before the
+  // first reply lands).
+  String _activeSearch = '';
+  int _searchVersion = 0;
 
   @override
   void initState() {
     super.initState();
     fetchMovies(); // First page
     _scrollController.addListener(() {
-      if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 300 && !_isLoading && _hasMore) {
+      // Pagination only applies to the regular browse view, not search results.
+      if (_activeSearch.isEmpty &&
+          _scrollController.position.pixels >=
+              _scrollController.position.maxScrollExtent - 300 &&
+          !_isLoading &&
+          _hasMore) {
         fetchMovies(); // Load next page
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _controller.dispose();
+    super.dispose();
   }
 
   // void _filterMovies(String query) {
@@ -56,6 +74,7 @@ Future<void> fetchMovies() async {
   final fetchMovieUrl = Uri.parse('http://$apiHost/api/movies?page=$_currentPage&size=15');
   try {
     final response = await http.get(fetchMovieUrl);
+    if (!mounted) return;
     if (response.statusCode == 200) {
       print(_currentPage);
       List<dynamic> data = json.decode(response.body);
@@ -83,17 +102,53 @@ Future<void> fetchMovies() async {
   } catch (e) {
     print('Error: $e');
   } finally {
-    setState(() {
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 }
 
-  Future<void> fetchSearchedMovies(String keyword) async {
+  // Called per keystroke. We DO NOT search here - searching only happens on
+  // submit (Enter). This handler just keeps the X clear icon in sync and
+  // auto-resets to the paginated browse if the user manually deletes all
+  // characters.
+  void _onSearchChanged(String value) {
+    if (value.trim().isEmpty && _activeSearch.isNotEmpty) {
+      _resetToPaginated();
+      return;
+    }
+    setState(() {}); // refresh the X suffix-icon visibility
+  }
+
+  // Restore the regular paginated browse list. Used when the user clears the
+  // search box or presses the X button.
+  void _resetToPaginated() {
+    if (_activeSearch.isEmpty) return; // already in browse mode
+    _searchVersion++; // invalidate any in-flight search
+    setState(() {
+      _activeSearch = '';
+      allMovieData = [];
+      _currentPage = 0;
+      _hasMore = true;
+    });
+    fetchMovies();
+  }
+
+  Future<void> _runSearch(String keyword) async {
+    final myVersion = ++_searchVersion;
+    setState(() {
+      _activeSearch = keyword;
+      _isLoading = true;
+    });
+
     final fetchMovieUrl =
         Uri.parse('http://$apiHost/api/search?keyword=$keyword');
     try {
       final response = await http.get(fetchMovieUrl);
+      // Discard if a newer search has been kicked off in the meantime.
+      if (myVersion != _searchVersion || !mounted) return;
 
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);
@@ -113,12 +168,17 @@ Future<void> fetchMovies() async {
               'tags': List<String>.from(json['tags'] ?? []),
             };
           }).toList();
+          _hasMore = false; // search results aren't paginated
         });
       } else {
         print('Failed to fetch movies. Status code: ${response.statusCode}');
       }
     } catch (e) {
       print('Error fetching movies: $e');
+    } finally {
+      if (mounted && myVersion == _searchVersion) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -144,35 +204,50 @@ Future<void> fetchMovies() async {
                   children: [
                     searchField(),
                     SizedBox(height: 10),
-                    Container(
-                      width: double.infinity,
-                      child: Wrap(
-                        spacing: 15,
-                        runSpacing: 15,
-                        children: allMovieData.map((rd) {
-                          return Container(
-                            height: 370,
-                            width: 175,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: Colors.transparent,
-                            ),
-                            child: InkWell(
-                              onTap: () {
-                                // Function to log the click
-                                addlogfx(rd['id']);
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          MovieDetails(allMovieData: rd)),
-                                );
-                              },
-                              child: MovieCard(allMovieData: rd),
-                            ),
-                          );
-                        }).toList(),
-                      ),
+                    if (_isLoading && allMovieData.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 80),
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    else
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        // Column count is derived from available width so the
+                        // grid adapts: ~2 cols on phones, ~4 on tablets / phone
+                        // landscape, ~6 on iPad landscape. Cards stay near the
+                        // original 175dp target instead of stretching huge.
+                        const spacing = 15.0;
+                        const targetCardWidth = 175.0;
+                        final available = constraints.maxWidth;
+                        final columns = (available / (targetCardWidth + spacing))
+                            .round()
+                            .clamp(2, 6);
+                        final cardWidth =
+                            (available - spacing * (columns - 1)) / columns;
+                        final cardHeight = cardWidth * (370 / 175);
+                        return Wrap(
+                          spacing: spacing,
+                          runSpacing: spacing,
+                          children: allMovieData.map((rd) {
+                            return SizedBox(
+                              height: cardHeight,
+                              width: cardWidth,
+                              child: InkWell(
+                                onTap: () {
+                                  addlogfx(rd['id']);
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            MovieDetails(allMovieData: rd)),
+                                  );
+                                },
+                                child: MovieCard(allMovieData: rd),
+                              ),
+                            );
+                          }).toList(),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -203,8 +278,16 @@ Future<void> fetchMovies() async {
       ),
       child: TextField(
         controller: _controller,
-        onChanged: fetchSearchedMovies,
-        onSubmitted: fetchSearchedMovies,
+        onChanged: _onSearchChanged,
+        // Search only fires on Enter - typing alone never hits the network.
+        onSubmitted: (v) {
+          final t = v.trim();
+          if (t.isEmpty) {
+            _resetToPaginated();
+          } else {
+            _runSearch(t);
+          }
+        },
         decoration: InputDecoration(
           hintText: 'Search Movies',
           border: InputBorder.none,
@@ -213,7 +296,7 @@ Future<void> fetchMovies() async {
                   icon: Icon(Icons.clear),
                   onPressed: () {
                     _controller.clear();
-                    fetchSearchedMovies('');
+                    _resetToPaginated();
                   },
                 )
               : null,

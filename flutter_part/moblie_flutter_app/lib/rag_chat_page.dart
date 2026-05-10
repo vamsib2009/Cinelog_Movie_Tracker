@@ -71,6 +71,7 @@ class _RagChatPageState extends State<RagChatPage> {
           'history': historyJson,
         }),
       );
+      if (!mounted) return;
       debugPrint('[rag] /agent status=${resp.statusCode}');
 
       if (resp.statusCode != 200) {
@@ -109,6 +110,7 @@ class _RagChatPageState extends State<RagChatPage> {
       });
     } catch (e, st) {
       debugPrint('[rag] exception: $e\n$st');
+      if (!mounted) return;
       setState(() {
         _messages.add(_ChatMessage(
           role: 'error',
@@ -359,8 +361,9 @@ class _RagChatPageState extends State<RagChatPage> {
   @override
   Widget build(BuildContext context) {
     // Reserve space at the bottom so the input bar sits above the
-    // draggable nav sheet (which is ~13% of screen height when collapsed).
-    final bottomReserve = MediaQuery.of(context).size.height * 0.15;
+    // draggable nav sheet (15% of screen height when collapsed) with a tiny
+    // gap so they don't touch on shorter devices.
+    final bottomReserve = MediaQuery.of(context).size.height * 0.17;
 
     return Padding(
       padding: EdgeInsets.only(bottom: bottomReserve),
