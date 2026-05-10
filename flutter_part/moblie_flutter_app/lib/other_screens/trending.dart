@@ -80,33 +80,45 @@ class _TrendingPageState extends State<Trending> {
                       child: Center(child: CircularProgressIndicator()),
                     )
                   else
-                  Wrap(
-                    spacing: 20,
-                    runSpacing: 20,
-                    children: allMovieData.map((rd) {
-                      return Container(
-                        height: 370,
-                        width: 175,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: Colors.transparent,
-                        ),
-                        child: InkWell(
-                          onTap: () {
-                            // Function to log the click
-                            addlogfx(rd['id']);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      MovieDetails(allMovieData: rd)),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        // Same responsive grid math as Discover: ~2 cols on
+                        // phones, ~4 on tablets / phone landscape, ~6 on iPad
+                        // landscape. Cards stay near the 175dp target.
+                        const spacing = 15.0;
+                        const targetCardWidth = 175.0;
+                        final available = constraints.maxWidth;
+                        final columns =
+                            (available / (targetCardWidth + spacing))
+                                .round()
+                                .clamp(2, 6);
+                        final cardWidth =
+                            (available - spacing * (columns - 1)) / columns;
+                        final cardHeight = cardWidth * (370 / 175);
+                        return Wrap(
+                          spacing: spacing,
+                          runSpacing: spacing,
+                          children: allMovieData.map((rd) {
+                            return SizedBox(
+                              width: cardWidth,
+                              height: cardHeight,
+                              child: InkWell(
+                                onTap: () {
+                                  addlogfx(rd['id']);
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            MovieDetails(allMovieData: rd)),
+                                  );
+                                },
+                                child: MovieCard(allMovieData: rd),
+                              ),
                             );
-                          },
-                          child: MovieCard(allMovieData: rd),
-                        ),
-                      );
-                    }).toList(),
-                  ),
+                          }).toList(),
+                        );
+                      },
+                    ),
                 ],
               ),
             ),

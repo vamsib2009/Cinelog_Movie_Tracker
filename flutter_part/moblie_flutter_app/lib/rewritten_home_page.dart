@@ -271,8 +271,8 @@ class _RewrittenHomePageState extends State<RewrittenHomePage> {
       // 0.13 was tight on shorter devices (640px tall = 83px sheet) - the
       // grab handle + nav row could overflow vertically. 0.15 gives ~10px
       // breathing room everywhere without changing the visual much.
-      initialChildSize: 0.15,
-      minChildSize: 0.15,
+      initialChildSize: 0.13,
+      minChildSize: 0.13,
       maxChildSize: 0.8,
       builder: (context, scrollController) {
         return ClipRRect(

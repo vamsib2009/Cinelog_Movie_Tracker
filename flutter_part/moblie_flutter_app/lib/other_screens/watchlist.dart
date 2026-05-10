@@ -113,63 +113,72 @@ class _WatchlistPageState extends State<Watchlist> {
                         child: Center(child: CircularProgressIndicator()),
                       )
                     else
-                    Container(
-                      width: double.infinity,
-                      child: Wrap(
-                        spacing: 20,
-                        runSpacing: 20,
-                        children: allMovieData.map((rd) {
-                          return Container(
-                            height: 370,
-                            width: 175,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: Colors.transparent,
-                            ),
-                            child: InkWell(
-                              onTap: () {
-                                // Function to log the click
-                                addlogfx(rd['id']);
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          MovieDetails(allMovieData: rd)),
-                                );
-                              },
-                              child: SizedBox(
-                                width:150,
-                                height:300,
-                                child: Stack(children: [
-                                  Positioned.fill(child: MovieCard(allMovieData: rd)),
-                                  Positioned(
-                                    bottom:4,
-                                    right: 4,
-                                    child: Container(
-                                      width: 50,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.5), shape: BoxShape.circle),
-                                      child: IconButton(
-                                        splashColor: Colors.transparent,
-                                        highlightColor: Colors.transparent,
-                                        tooltip: 'Remove from Watchlist',
-                                        icon: Icon(
-                                          Icons.close,
-                                          color: Colors.blueGrey,
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          // Same responsive grid as Discover.
+                          const spacing = 15.0;
+                          const targetCardWidth = 175.0;
+                          final available = constraints.maxWidth;
+                          final columns =
+                              (available / (targetCardWidth + spacing))
+                                  .round()
+                                  .clamp(2, 6);
+                          final cardWidth =
+                              (available - spacing * (columns - 1)) / columns;
+                          final cardHeight = cardWidth * (370 / 175);
+                          return Wrap(
+                            spacing: spacing,
+                            runSpacing: spacing,
+                            children: allMovieData.map((rd) {
+                              return SizedBox(
+                                width: cardWidth,
+                                height: cardHeight,
+                                child: InkWell(
+                                  onTap: () {
+                                    addlogfx(rd['id']);
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => MovieDetails(
+                                              allMovieData: rd)),
+                                    );
+                                  },
+                                  child: Stack(
+                                    children: [
+                                      Positioned.fill(
+                                          child: MovieCard(allMovieData: rd)),
+                                      Positioned(
+                                        bottom: 4,
+                                        right: 4,
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.white
+                                                .withValues(alpha: 0.5),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: IconButton(
+                                            splashColor: Colors.transparent,
+                                            highlightColor: Colors.transparent,
+                                            tooltip: 'Remove from Watchlist',
+                                            icon: const Icon(
+                                              Icons.close,
+                                              color: Colors.blueGrey,
+                                            ),
+                                            iconSize: 22,
+                                            onPressed: () =>
+                                                removeWatchlistMovie(
+                                                    rd['id'], context),
+                                          ),
                                         ),
-                                        iconSize: 27,
-                                        onPressed: () =>
-                                            {removeWatchlistMovie(rd['id'], context)},
                                       ),
-                                    ),
+                                    ],
                                   ),
-                                ]),
-                              ),
-                            ),
+                                ),
+                              );
+                            }).toList(),
                           );
-                        }).toList(),
+                        },
                       ),
-                    ),
                   ],
                 ),
               ),
