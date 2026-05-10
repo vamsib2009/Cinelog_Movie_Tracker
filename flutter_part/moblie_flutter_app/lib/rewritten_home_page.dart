@@ -18,6 +18,10 @@ class RewrittenHomePage extends StatefulWidget {
 
 class _RewrittenHomePageState extends State<RewrittenHomePage> {
   late int _selectedPage;
+  // Discover (index 2) is the only tab we cache. Once mounted, we keep it in
+  // the tree via Offstage so revisiting it doesn't refire /api/movies. All
+  // other tabs rebuild on every switch as before.
+  bool _discoverMounted = false;
 
   @override
   void initState() {
@@ -25,18 +29,18 @@ class _RewrittenHomePageState extends State<RewrittenHomePage> {
     _selectedPage = 1;
   }
 
-  Widget getSelectedPage(int index) {
+  Widget _buildPageForIndex(int index) {
     switch (index) {
       case 1:
-        return MyHomePage(title: 'All Movies');
-      case 2:
-        return Trending();
-      case 3:
-        return Watchlist();
-      case 4:
-        return Favorite();
-      case 5:
         return const RagChatPage();
+      case 2:
+        return MyHomePage(title: 'All Movies');
+      case 3:
+        return Trending();
+      case 4:
+        return Watchlist();
+      case 5:
+        return Favorite();
       default:
         return const RagChatPage();
     }
@@ -113,11 +117,11 @@ class _RewrittenHomePageState extends State<RewrittenHomePage> {
 
   final List<String> _titles = [
     'Dummy',
-    'Welcome!',
+    'Ask Cinelog',
+    'Discover',
     'Trending This Week!',
     'Watchlist',
     'MY Favorites',
-    'Ask Cinelog',
   ];
   Widget buildSideDrawer(BuildContext context) {
     return Drawer(
@@ -176,7 +180,19 @@ class _RewrittenHomePageState extends State<RewrittenHomePage> {
 
         body: Stack(
           children: [
-            getSelectedPage(_selectedPage), // Main content
+            // Non-Discover tabs render fresh each switch (original behavior).
+            if (_selectedPage != 2) _buildPageForIndex(_selectedPage),
+            // Discover stays mounted once visited; Offstage hides it without
+            // disposing its State, so the movie list and scroll position
+            // survive tab switches with no /api/movies refetch.
+            if (_discoverMounted)
+              Offstage(
+                offstage: _selectedPage != 2,
+                child: TickerMode(
+                  enabled: _selectedPage == 2,
+                  child: const MyHomePage(title: 'All Movies'),
+                ),
+              ),
             bottomModalSheet(context), // Draggable sheet on top
           ],
         ),
@@ -259,11 +275,11 @@ class _RewrittenHomePageState extends State<RewrittenHomePage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildNavItem(CupertinoIcons.house_fill, 'Home', 1),
-          _buildNavItem(CupertinoIcons.flame_fill, 'Trending', 2),
-          _buildNavItem(CupertinoIcons.square_list_fill, 'Watchlist', 3),
-          _buildNavItem(CupertinoIcons.heart_fill, 'Favorites', 4),
-          _buildNavItem(CupertinoIcons.sparkles, 'Ask', 5),
+          _buildNavItem(CupertinoIcons.sparkles, 'Ask', 1),
+          _buildNavItem(CupertinoIcons.compass_fill, 'Discover', 2),
+          _buildNavItem(CupertinoIcons.flame_fill, 'Trending', 3),
+          _buildNavItem(CupertinoIcons.square_list_fill, 'Watchlist', 4),
+          _buildNavItem(CupertinoIcons.heart_fill, 'Favorites', 5),
         ],
       ),
     );
@@ -276,6 +292,7 @@ class _RewrittenHomePageState extends State<RewrittenHomePage> {
       onTap: () {
         setState(() {
           _selectedPage = index;
+          if (index == 2) _discoverMounted = true;
         });
       },
       child: AnimatedContainer(

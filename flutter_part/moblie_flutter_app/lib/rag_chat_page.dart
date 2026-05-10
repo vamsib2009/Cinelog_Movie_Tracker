@@ -5,7 +5,8 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:moblie_flutter_app/api_config.dart';
-import 'package:moblie_flutter_app/movie_card.dart' show getCategoryColor, getCategoryIcon;
+import 'package:moblie_flutter_app/movie_card.dart'
+    show getCategoryColor, getCategoryIcon;
 import 'package:moblie_flutter_app/movie_details.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -49,9 +50,8 @@ class _RagChatPageState extends State<RagChatPage> {
     final recent = priorTurns.length <= 6
         ? priorTurns
         : priorTurns.sublist(priorTurns.length - 6);
-    final historyJson = recent
-        .map((m) => {'role': m.role, 'content': m.text})
-        .toList();
+    final historyJson =
+        recent.map((m) => {'role': m.role, 'content': m.text}).toList();
 
     setState(() {
       _messages.add(_ChatMessage(role: 'user', text: query));
@@ -60,117 +60,53 @@ class _RagChatPageState extends State<RagChatPage> {
     });
     _scrollToBottom();
 
-    final httpClient = http.Client();
-    bool assistantStarted = false;
     try {
-      final url = Uri.http(ragHost, '/search/stream');
-      final req = http.Request('POST', url)
-        ..headers['Content-Type'] = 'application/json'
-        ..body = json.encode({
+      final url = Uri.http(ragHost, '/agent');
+      final resp = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
           'query': query,
           'max_suggestions': 3,
           'history': historyJson,
-        });
-
-      final resp = await httpClient.send(req);
-      debugPrint('[rag] /search/stream status=${resp.statusCode}');
+        }),
+      );
+      debugPrint('[rag] /agent status=${resp.statusCode}');
 
       if (resp.statusCode != 200) {
-        final body = await resp.stream.bytesToString();
-        debugPrint('[rag] error body: $body');
+        debugPrint('[rag] error body: ${resp.body}');
         setState(() {
           _messages.add(_ChatMessage(
             role: 'error',
-            text: 'Server error ${resp.statusCode}: $body',
+            text: 'Server error ${resp.statusCode}: ${resp.body}',
           ));
         });
         return;
       }
 
-      // SSE stream: events are `data: <json>\n\n`. We buffer raw chunks and
-      // split on the SSE event boundary ourselves, since intermediate proxies
-      // sometimes coalesce or split lines unexpectedly.
-      String buffer = '';
-      int eventCount = 0;
-      await for (final chunk in resp.stream.transform(utf8.decoder)) {
-        buffer += chunk;
-        while (true) {
-          final idx = buffer.indexOf('\n\n');
-          if (idx < 0) break;
-          final eventBlock = buffer.substring(0, idx);
-          buffer = buffer.substring(idx + 2);
-          for (final line in eventBlock.split('\n')) {
-            if (!line.startsWith('data: ')) continue;
-            eventCount++;
-            if (eventCount <= 3) debugPrint('[rag] event: $line');
-        final dynamic event;
-        try {
-          event = json.decode(line.substring(6));
-        } catch (_) {
-          continue;
-        }
+      final data = json.decode(utf8.decode(resp.bodyBytes));
+      final text = (data['text'] ?? '').toString();
+      final rawMovies = data['movies'];
+      final movies = rawMovies is List
+          ? rawMovies.map<Map<String, dynamic>>((m) {
+              final raw = Map<String, dynamic>.from(m as Map);
+              return {
+                ...raw,
+                'actorNames': List<String>.from(raw['actorNames'] ?? []),
+                'language': List<String>.from(raw['language'] ?? []),
+                'country': List<String>.from(raw['country'] ?? []),
+                'tags': List<String>.from(raw['tags'] ?? []),
+              };
+            }).toList()
+          : null;
 
-        final type = event['type'];
-        if (type == 'text') {
-          final delta = (event['delta'] ?? '').toString();
-          if (delta.isEmpty) continue;
-          if (!assistantStarted) {
-            assistantStarted = true;
-            setState(() {
-              _loading = false; // hide typing dots
-              _messages.add(_ChatMessage(role: 'assistant', text: delta));
-            });
-          } else {
-            setState(() {
-              final last = _messages.last;
-              _messages[_messages.length - 1] = _ChatMessage(
-                role: 'assistant',
-                text: last.text + delta,
-                movies: last.movies,
-              );
-            });
-          }
-          _scrollToBottom();
-        } else if (type == 'done') {
-          final rawMovies = event['movies'];
-          final movies = rawMovies is List
-              ? rawMovies.map<Map<String, dynamic>>((m) {
-                  final raw = Map<String, dynamic>.from(m as Map);
-                  return {
-                    ...raw,
-                    'actorNames': List<String>.from(raw['actorNames'] ?? []),
-                    'language': List<String>.from(raw['language'] ?? []),
-                    'country': List<String>.from(raw['country'] ?? []),
-                    'tags': List<String>.from(raw['tags'] ?? []),
-                  };
-                }).toList()
-              : null;
-          if (!assistantStarted) {
-            // Edge case: no text streamed (shouldn't happen, but safe).
-            setState(() {
-              _loading = false;
-              _messages.add(_ChatMessage(
-                role: 'assistant',
-                text: '',
-                movies: movies,
-              ));
-            });
-          } else if (movies != null) {
-            setState(() {
-              final last = _messages.last;
-              _messages[_messages.length - 1] = _ChatMessage(
-                role: 'assistant',
-                text: last.text,
-                movies: movies,
-              );
-            });
-          }
-          _scrollToBottom();
-            }
-          }
-        }
-      }
-      debugPrint('[rag] stream closed. total events=$eventCount');
+      setState(() {
+        _messages.add(_ChatMessage(
+          role: 'assistant',
+          text: text,
+          movies: movies,
+        ));
+      });
     } catch (e, st) {
       debugPrint('[rag] exception: $e\n$st');
       setState(() {
@@ -180,7 +116,6 @@ class _RagChatPageState extends State<RagChatPage> {
         ));
       });
     } finally {
-      httpClient.close();
       if (mounted) setState(() => _loading = false);
       _scrollToBottom();
     }
@@ -224,7 +159,7 @@ class _RagChatPageState extends State<RagChatPage> {
             ),
             const SizedBox(height: 18),
             Text(
-              'Try: "feel-good telugu family movie" or\n"who directed Inception?"',
+              'Try: "feel-good telugu family movie" or\n"who directed Inception?" or\n"movies showing near me"',
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 13,
@@ -241,8 +176,7 @@ class _RagChatPageState extends State<RagChatPage> {
 
   // Markdown styling for assistant messages — matches the chat bubble theme.
   late final MarkdownStyleSheet _markdownStyle = MarkdownStyleSheet(
-    p: GoogleFonts.poppins(
-        color: Colors.white, fontSize: 14, height: 1.4),
+    p: GoogleFonts.poppins(color: Colors.white, fontSize: 14, height: 1.4),
     strong: GoogleFonts.poppins(
         color: Colors.white,
         fontSize: 14,
@@ -253,8 +187,8 @@ class _RagChatPageState extends State<RagChatPage> {
         fontSize: 14,
         height: 1.4,
         fontStyle: FontStyle.italic),
-    listBullet: GoogleFonts.poppins(
-        color: Colors.white, fontSize: 14, height: 1.4),
+    listBullet:
+        GoogleFonts.poppins(color: Colors.white, fontSize: 14, height: 1.4),
     h1: GoogleFonts.poppins(
         color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
     h2: GoogleFonts.poppins(
@@ -278,8 +212,7 @@ class _RagChatPageState extends State<RagChatPage> {
     ),
     blockquotePadding: const EdgeInsets.only(left: 10, top: 2, bottom: 2),
     a: TextStyle(
-        color: Colors.green.shade300,
-        decoration: TextDecoration.underline),
+        color: Colors.green.shade300, decoration: TextDecoration.underline),
     blockSpacing: 6,
     listIndent: 16,
   );
@@ -350,8 +283,7 @@ class _RagChatPageState extends State<RagChatPage> {
                   padding: EdgeInsets.zero,
                   itemCount: m.movies!.length,
                   separatorBuilder: (_, __) => const SizedBox(width: 10),
-                  itemBuilder: (ctx, i) =>
-                      _ChatMovieCard(movie: m.movies![i]),
+                  itemBuilder: (ctx, i) => _ChatMovieCard(movie: m.movies![i]),
                 ),
               ),
             ),
@@ -397,8 +329,8 @@ class _RagChatPageState extends State<RagChatPage> {
                 ),
                 filled: true,
                 fillColor: Colors.white.withOpacity(0.08),
-                contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 12),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
                   borderSide: BorderSide.none,
@@ -408,17 +340,14 @@ class _RagChatPageState extends State<RagChatPage> {
           ),
           const SizedBox(width: 8),
           Material(
-            color: _loading
-                ? Colors.green.shade900
-                : Colors.green.shade600,
+            color: _loading ? Colors.green.shade900 : Colors.green.shade600,
             shape: const CircleBorder(),
             child: InkWell(
               customBorder: const CircleBorder(),
               onTap: _loading ? null : _send,
               child: const Padding(
                 padding: EdgeInsets.all(12),
-                child: Icon(Icons.arrow_upward,
-                    color: Colors.white, size: 22),
+                child: Icon(Icons.arrow_upward, color: Colors.white, size: 22),
               ),
             ),
           ),
