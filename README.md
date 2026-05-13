@@ -63,7 +63,7 @@ The assistant is designed to answer movie-related questions and provide recommen
 ---
 
 ### Frontend (Flutter)
-Designed and developed the Flutter frontend application.
+Designed and developed the Flutter frontend and mobile application.
 
 Current work includes:
 
@@ -90,8 +90,8 @@ Current deployment setup:
 
 - `SpringEcom/` — Spring Boot backend
 - `RAG_backend/` — FastAPI + LangChain AI backend
-- `flutter_part/mobile_flutter_app/` — Flutter frontend
-- `Cinelog_Scrapers/` — scraping / data preparation utilities
+- `flutter_part/mobile_flutter_app/` — Flutter frontend - Mobile and Web
+- `Cinelog_Scrapers/` — scraping / data ingestion and preparation utilities
 - `Streamlit_Files/` — earlier experimental UI/prototyping work
 
 ---
@@ -102,7 +102,7 @@ Planned improvements:
 
 - stronger recommendation ranking logic
 - hybrid recommendation retrieval
-- improved chatbot reasoning and tool orchestration
+- improved chatbot/ agent reasoning and tool orchestration
 - better nearby theater discovery via dedicated APIs
 - authentication and authorization
 - user progress/history tracking
